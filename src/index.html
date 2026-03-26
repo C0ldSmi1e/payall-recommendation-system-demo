@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Crypto Card Recommendations — CoT Pipeline</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f0f0f; color: #e0e0e0; padding: 2rem; max-width: 1000px; margin: 0 auto; }
+    h1 { font-size: 1.5rem; margin-bottom: 1.5rem; color: #fff; }
+
+    .user-select { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 2rem; }
+    .user-btn { padding: 0.6rem 1.2rem; border: 1px solid #333; background: #1a1a1a; color: #e0e0e0; border-radius: 8px; cursor: pointer; transition: all 0.2s; font-size: 0.9rem; }
+    .user-btn:hover { border-color: #666; background: #222; }
+    .user-btn.active { border-color: #7c3aed; background: #1e1033; color: #c4b5fd; }
+
+    .user-info { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 10px; padding: 1.25rem; margin-bottom: 2rem; display: none; }
+    .user-info.visible { display: block; }
+    .user-info h3 { color: #c4b5fd; margin-bottom: 0.25rem; }
+    .user-desc { color: #888; font-size: 0.9rem; margin-bottom: 1rem; font-style: italic; }
+    .user-sections { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+    .user-section h4 { color: #c4b5fd; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem; }
+    .user-detail { display: flex; flex-direction: column; gap: 0.4rem; font-size: 0.85rem; }
+    .user-detail span { color: #888; }
+    .user-detail strong { color: #e0e0e0; }
+    .persona-box { background: #151520; border: 1px solid #2a2a3a; border-radius: 8px; padding: 1rem; margin-bottom: 0.75rem; }
+    .persona-box p { color: #bbb; font-size: 0.85rem; line-height: 1.5; }
+    .persona-label { display: inline-block; background: #1e1033; color: #c4b5fd; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; padding: 0.15rem 0.5rem; border-radius: 4px; margin-bottom: 0.5rem; }
+    .txn-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; margin-top: 0.25rem; max-height: 200px; overflow-y: auto; display: block; }
+    .txn-table th { color: #888; font-weight: 500; text-align: left; padding: 0.3rem 0.5rem; border-bottom: 1px solid #2a2a2a; }
+    .txn-table td { color: #ccc; padding: 0.3rem 0.5rem; border-bottom: 1px solid #1a1a2a; }
+    .txn-table .txn-amount { color: #6ee7b7; font-weight: 500; }
+    .txn-table .txn-category { color: #c4b5fd; }
+    .txn-empty { color: #555; font-size: 0.85rem; font-style: italic; }
+    .tag { display: inline-block; background: #1a1a2a; border: 1px solid #2a2a3a; color: #aaa; font-size: 0.75rem; padding: 0.15rem 0.5rem; border-radius: 12px; margin: 0.1rem; }
+    .tag.priority { background: #1e1033; border-color: #3a2a5a; color: #c4b5fd; }
+    .tag.crypto { background: #0a2e1a; border-color: #1a4a2a; color: #6ee7b7; }
+    .tag.use { background: #2e2a0a; border-color: #4a3a1a; color: #fcd34d; }
+
+    /* Pipeline */
+    .pipeline { display: none; margin-bottom: 2rem; }
+    .pipeline.visible { display: block; }
+    .pipeline-title { font-size: 1.1rem; font-weight: 600; color: #fff; margin-bottom: 1rem; }
+    .step { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 10px; margin-bottom: 0.5rem; overflow: hidden; transition: border-color 0.3s; }
+    .step.running { border-color: #7c3aed; }
+    .step.done { border-color: #1a4a2a; }
+    .step.error { border-color: #5c2020; }
+    .step-header { display: flex; align-items: center; padding: 0.75rem 1rem; cursor: pointer; user-select: none; }
+    .step-icon { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 0.75rem; font-size: 0.75rem; font-weight: 700; flex-shrink: 0; }
+    .step.pending .step-icon { background: #2a2a2a; color: #666; }
+    .step.running .step-icon { background: #1e1033; color: #c4b5fd; animation: pulse 1.5s ease-in-out infinite; }
+    .step.done .step-icon { background: #0a2e1a; color: #6ee7b7; }
+    .step.error .step-icon { background: #2a1010; color: #f87171; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    .step-info { flex: 1; }
+    .step-name { font-size: 0.95rem; font-weight: 500; color: #e0e0e0; }
+    .step-desc { font-size: 0.8rem; color: #666; }
+    .step-time { font-size: 0.8rem; color: #666; margin-left: auto; padding-left: 1rem; }
+    .step-toggle { color: #666; margin-left: 0.5rem; font-size: 0.8rem; transition: transform 0.2s; }
+    .step.expanded .step-toggle { transform: rotate(180deg); }
+    .step-body { display: none; padding: 0 1rem 1rem; }
+    .step.expanded .step-body { display: block; }
+    .step-reasoning { background: #111118; border: 1px solid #222230; border-radius: 6px; padding: 0.75rem; font-size: 0.82rem; line-height: 1.6; color: #aaa; max-height: 400px; overflow-y: auto; white-space: pre-wrap; word-wrap: break-word; }
+    .step-reasoning .cursor { display: inline-block; width: 2px; height: 1em; background: #7c3aed; animation: blink 0.8s step-end infinite; vertical-align: text-bottom; margin-left: 1px; }
+    @keyframes blink { 50% { opacity: 0; } }
+    .step-summary { margin-top: 0.5rem; padding: 0.5rem 0.75rem; background: #0a2e1a; border-radius: 6px; font-size: 0.8rem; color: #6ee7b7; }
+
+    /* Results */
+    .results { display: none; }
+    .results.visible { display: block; }
+    .results-title { font-size: 1.1rem; font-weight: 600; color: #fff; margin-bottom: 1rem; }
+
+    /* Primary card - prominent */
+    .primary-card { background: #1a1a1a; border: 2px solid #7c3aed; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; position: relative; }
+    .primary-badge { position: absolute; top: -10px; left: 1rem; background: #7c3aed; color: #fff; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; padding: 0.2rem 0.75rem; border-radius: 10px; }
+    .primary-card .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; margin-top: 0.25rem; }
+    .card-name { font-size: 1.1rem; font-weight: 600; color: #fff; }
+    .card-score { padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.85rem; font-weight: 600; }
+    .card-score.high { background: #0a2e1a; color: #6ee7b7; }
+    .card-score.medium { background: #2e2a0a; color: #fcd34d; }
+    .card-score.low { background: #1e1033; color: #c4b5fd; }
+    .card-tagline { color: #c4b5fd; font-size: 1rem; font-weight: 600; margin-bottom: 0.5rem; }
+    .card-reason { color: #aaa; font-size: 0.9rem; margin-bottom: 0.75rem; line-height: 1.5; }
+    .card-meta { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.75rem; }
+    .chip { display: inline-flex; align-items: center; gap: 0.3rem; background: #151520; border: 1px solid #2a2a3a; color: #999; font-size: 0.75rem; padding: 0.2rem 0.6rem; border-radius: 14px; }
+    .chip.highlight { border-color: #3a2a5a; color: #c4b5fd; }
+    .chip.green { border-color: #1a4a2a; color: #6ee7b7; }
+    .card-features { background: #111118; border: 1px solid #222230; border-radius: 6px; padding: 0.6rem 0.8rem; margin-bottom: 0.75rem; }
+    .card-features-title { font-size: 0.75rem; color: #666; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.35rem; }
+    .card-features-list { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+    .feat { font-size: 0.78rem; color: #aaa; background: #1a1a2a; padding: 0.15rem 0.5rem; border-radius: 10px; }
+    .card-details { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .pros, .cons { font-size: 0.85rem; }
+    .pros h4 { color: #6ee7b7; margin-bottom: 0.4rem; }
+    .cons h4 { color: #f87171; margin-bottom: 0.4rem; }
+    .pros li, .cons li { margin-left: 1rem; margin-bottom: 0.2rem; line-height: 1.4; }
+
+    /* Action button */
+    .next-action { margin-top: 1rem; padding: 0.75rem 1rem; background: #1e1033; border: 1px solid #7c3aed; border-radius: 8px; display: flex; align-items: center; gap: 0.75rem; }
+    .next-action-icon { font-size: 1.2rem; }
+    .next-action-text { font-size: 0.9rem; color: #c4b5fd; font-weight: 500; }
+    .next-action-desc { font-size: 0.8rem; color: #888; }
+
+    /* Backup cards - smaller */
+    .backups-title { font-size: 0.9rem; color: #888; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.75rem; }
+    .backup-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
+    .backup-card { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 10px; padding: 1rem; }
+    .backup-card .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+    .backup-card .card-name { font-size: 0.95rem; }
+    .backup-card .card-tagline { font-size: 0.85rem; margin-bottom: 0.4rem; }
+    .backup-card .card-reason { font-size: 0.82rem; margin-bottom: 0.5rem; }
+    .pick-this-if { background: #151520; border: 1px solid #2a2a3a; border-radius: 6px; padding: 0.5rem 0.75rem; font-size: 0.8rem; color: #fcd34d; }
+    .pick-this-if strong { color: #fcd34d; }
+
+    /* Why not others */
+    .why-not { margin-top: 1rem; }
+    .why-not-title { font-size: 0.85rem; color: #666; cursor: pointer; user-select: none; }
+    .why-not-title:hover { color: #888; }
+    .why-not-list { display: none; margin-top: 0.5rem; }
+    .why-not-list.visible { display: block; }
+    .why-not-item { font-size: 0.8rem; color: #888; padding: 0.3rem 0; border-bottom: 1px solid #1a1a2a; }
+    .why-not-item strong { color: #aaa; }
+
+    .error-msg { background: #2a1010; border: 1px solid #5c2020; border-radius: 10px; padding: 1.25rem; color: #f87171; display: none; }
+    .error-msg.visible { display: block; }
+
+    /* ---- Mobile responsive ---- */
+    @media (max-width: 640px) {
+      body { padding: 1rem; }
+      h1 { font-size: 1.25rem; margin-bottom: 1rem; }
+
+      /* User buttons: horizontal scroll */
+      .user-select { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 0.5rem; gap: 0.5rem; }
+      .user-btn { flex-shrink: 0; padding: 0.5rem 0.9rem; font-size: 0.82rem; }
+
+      /* User info */
+      .user-info { padding: 1rem; }
+      .user-sections { grid-template-columns: 1fr; gap: 1rem; }
+      .persona-box p { font-size: 0.8rem; }
+      .txn-table { font-size: 0.72rem; max-height: 160px; }
+      .txn-table th, .txn-table td { padding: 0.25rem 0.35rem; }
+
+      /* Pipeline steps */
+      .step-header { padding: 0.6rem 0.75rem; }
+      .step-icon { width: 24px; height: 24px; font-size: 0.65rem; margin-right: 0.5rem; }
+      .step-name { font-size: 0.85rem; }
+      .step-desc { font-size: 0.72rem; }
+      .step-time { font-size: 0.72rem; padding-left: 0.5rem; }
+      .step-body { padding: 0 0.75rem 0.75rem; }
+      .step-reasoning { font-size: 0.75rem; max-height: 300px; padding: 0.5rem; }
+      .step-summary { font-size: 0.72rem; padding: 0.4rem 0.6rem; }
+
+      /* Primary card */
+      .primary-card { padding: 1rem; padding-top: 1.25rem; }
+      .primary-card .card-header { flex-direction: column; align-items: flex-start; gap: 0.4rem; }
+      .card-name { font-size: 0.95rem; }
+      .card-tagline { font-size: 0.88rem; }
+      .card-reason { font-size: 0.82rem; }
+      .card-meta { gap: 0.3rem; }
+      .chip { font-size: 0.68rem; padding: 0.15rem 0.45rem; }
+      .card-details { grid-template-columns: 1fr; gap: 0.75rem; }
+      .pros, .cons { font-size: 0.8rem; }
+      .next-action { padding: 0.6rem 0.75rem; gap: 0.5rem; }
+      .next-action-text { font-size: 0.82rem; }
+      .next-action-desc { font-size: 0.75rem; }
+
+      /* Backup cards: stack vertically */
+      .backup-cards { grid-template-columns: 1fr; gap: 0.75rem; }
+      .backup-card { padding: 0.85rem; }
+      .backup-card .card-name { font-size: 0.88rem; }
+      .backup-card .card-tagline { font-size: 0.8rem; }
+      .backup-card .card-reason { font-size: 0.78rem; }
+      .pick-this-if { font-size: 0.75rem; padding: 0.4rem 0.6rem; }
+
+      /* Why not */
+      .why-not-item { font-size: 0.75rem; }
+
+      /* Tags */
+      .tag { font-size: 0.68rem; padding: 0.1rem 0.4rem; }
+      .feat { font-size: 0.7rem; }
+    }
+
+    /* Tablet tweaks */
+    @media (min-width: 641px) and (max-width: 768px) {
+      body { padding: 1.5rem; }
+      .backup-cards { grid-template-columns: 1fr 1fr; }
+      .user-sections { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <h1>Crypto Card Recommendations</h1>
+
+  <div class="user-select" id="userButtons"></div>
+
+  <div class="user-info" id="userInfo">
+    <h3 id="userName"></h3>
+    <div class="user-desc" id="userDesc"></div>
+    <div id="userPersona"></div>
+    <div class="user-sections" id="userSections"></div>
+  </div>
+
+  <div class="pipeline" id="pipeline">
+    <div class="pipeline-title">Recommendation Pipeline</div>
+    <div id="pipelineSteps"></div>
+  </div>
+
+  <div class="error-msg" id="error"></div>
+  <div class="results" id="results">
+    <div id="resultContent"></div>
+  </div>
+
+  <script>
+    let users = [];
+    let currentEventSource = null;
+    const stepTimers = {};
+
+    async function init() {
+      const res = await fetch('/api/users');
+      users = await res.json();
+      const container = document.getElementById('userButtons');
+      users.forEach(u => {
+        const btn = document.createElement('button');
+        btn.className = 'user-btn';
+        btn.textContent = u.name;
+        btn.onclick = () => selectUser(u.id);
+        container.appendChild(btn);
+      });
+    }
+
+    function selectUser(id) {
+      const user = users.find(u => u.id === id);
+      document.querySelectorAll('.user-btn').forEach((btn, i) => {
+        btn.classList.toggle('active', users[i].id === id);
+      });
+      renderUserInfo(user);
+      startPipeline(id);
+    }
+
+    function renderUserInfo(user) {
+      const info = document.getElementById('userInfo');
+      info.classList.add('visible');
+      document.getElementById('userName').textContent = user.name;
+      document.getElementById('userDesc').textContent = user.description;
+
+      const needs = [];
+      if (user.needs_apple_pay) needs.push('Apple Pay');
+      if (user.needs_google_pay) needs.push('Google Pay');
+      if (user.needs_wechat_pay) needs.push('WeChat Pay');
+      if (user.needs_alipay) needs.push('Alipay');
+      const cardPref = [user.wants_physical_card && 'physical', user.wants_virtual_card && 'virtual'].filter(Boolean).join(' + ');
+
+      document.getElementById('userPersona').innerHTML = `
+        <div class="persona-box">
+          <span class="persona-label">Persona</span>
+          <p>
+            <strong>${user.name}</strong> is based in <strong>${user.country}</strong>${user.current_location !== user.country ? `, currently in <strong>${user.current_location}</strong>` : ''}.
+            Spends ~<strong>$${user.monthly_spend_usd.toLocaleString()}/mo</strong> in <strong>${user.preferred_currency}</strong>, primarily on ${user.primary_use.join(', ')}.
+            Fee sensitivity: <strong>${user.fee_sensitivity}</strong>. Prefers ${cardPref} cards.
+            ${needs.length ? `Needs ${needs.join(', ')}.` : ''}
+            Top priorities: ${user.priorities.map(p => `<strong>${p.replace(/_/g, ' ')}</strong>`).join(', ')}.
+            ${user.owned_card_ids.length ? `Already owns ${user.owned_card_ids.length} card(s).` : 'No cards yet.'}
+            <strong>${user.transaction_history.length}</strong> transactions on record.
+          </p>
+        </div>
+      `;
+
+      const txnHtml = user.transaction_history.length
+        ? `<table class="txn-table">
+            <thead><tr><th>Date</th><th>Category</th><th>Amount</th></tr></thead>
+            <tbody>${user.transaction_history.slice(0, 20).map(t => `
+              <tr>
+                <td>${t.date}</td>
+                <td class="txn-category">${t.category.replace(/_/g, ' ')}</td>
+                <td class="txn-amount">$${t.amount_usd.toLocaleString()}</td>
+              </tr>
+            `).join('')}${user.transaction_history.length > 20 ? `<tr><td colspan="3" style="color:#666;text-align:center;">...and ${user.transaction_history.length - 20} more</td></tr>` : ''}</tbody>
+          </table>`
+        : '<p class="txn-empty">No transaction history yet</p>';
+
+      document.getElementById('userSections').innerHTML = `
+        <div class="user-section">
+          <h4>Profile</h4>
+          <div class="user-detail">
+            <div><span>Country:</span> <strong>${user.country}</strong></div>
+            <div><span>Location:</span> <strong>${user.current_location}</strong></div>
+            <div><span>Monthly spend:</span> <strong>$${user.monthly_spend_usd.toLocaleString()}</strong></div>
+            <div><span>Currency:</span> <strong>${user.preferred_currency}</strong></div>
+            <div><span>Fee sensitivity:</span> <strong>${user.fee_sensitivity}</strong></div>
+            <div><span>Card type:</span> <strong>${cardPref}</strong></div>
+            <div><span>Owned cards:</span> <strong>${user.owned_card_ids.length ? user.owned_card_ids.map(id => '#' + id).join(', ') : 'None'}</strong></div>
+          </div>
+          <h4 style="margin-top: 0.75rem;">Cryptos</h4>
+          <div>${user.held_cryptos.map(c => `<span class="tag crypto">${c}</span>`).join(' ')}</div>
+          <h4 style="margin-top: 0.75rem;">Priorities</h4>
+          <div>${user.priorities.map(p => `<span class="tag priority">${p.replace(/_/g, ' ')}</span>`).join(' ')}</div>
+        </div>
+        <div class="user-section">
+          <h4>Recent Transactions (${user.transaction_history.length} total)</h4>
+          ${txnHtml}
+        </div>
+      `;
+    }
+
+    function startPipeline(userId) {
+      if (currentEventSource) currentEventSource.close();
+
+      const pipeline = document.getElementById('pipeline');
+      const results = document.getElementById('results');
+      const error = document.getElementById('error');
+      pipeline.classList.add('visible');
+      results.classList.remove('visible');
+      error.classList.remove('visible');
+      document.getElementById('pipelineSteps').innerHTML = '';
+      document.getElementById('resultContent').innerHTML = '';
+
+      currentEventSource = new EventSource(`/api/recommend/stream?userId=${userId}`);
+
+      currentEventSource.addEventListener('plan', (e) => {
+        const { steps } = JSON.parse(e.data);
+        renderPlan(steps);
+      });
+
+      currentEventSource.addEventListener('step_start', (e) => {
+        const { stepId } = JSON.parse(e.data);
+        setStepStatus(stepId, 'running');
+        expandStep(stepId);
+        stepTimers[stepId] = Date.now();
+      });
+
+      currentEventSource.addEventListener('step_stream', (e) => {
+        const { stepId, chunk } = JSON.parse(e.data);
+        appendReasoning(stepId, chunk);
+      });
+
+      currentEventSource.addEventListener('step_done', (e) => {
+        const { stepId, reasoning, result } = JSON.parse(e.data);
+        setStepStatus(stepId, 'done');
+        setStepTime(stepId);
+        setStepSummary(stepId, result);
+        collapseStep(stepId);
+      });
+
+      currentEventSource.addEventListener('step_error', (e) => {
+        const { stepId, error: errMsg } = JSON.parse(e.data);
+        if (stepId) setStepStatus(stepId, 'error');
+        document.getElementById('error').textContent = `Error: ${errMsg}`;
+        document.getElementById('error').classList.add('visible');
+        currentEventSource.close();
+      });
+
+      currentEventSource.addEventListener('pipeline_done', (e) => {
+        const { recommendation, cards } = JSON.parse(e.data);
+        renderFinalRecommendation(recommendation, cards);
+        currentEventSource.close();
+      });
+
+      currentEventSource.onerror = () => currentEventSource.close();
+    }
+
+    function renderPlan(steps) {
+      document.getElementById('pipelineSteps').innerHTML = steps.map((s, i) => `
+        <div class="step pending" id="step-${s.id}">
+          <div class="step-header" onclick="toggleStep('${s.id}')">
+            <div class="step-icon">${i + 1}</div>
+            <div class="step-info">
+              <div class="step-name">${s.name}</div>
+              <div class="step-desc">${s.description}</div>
+            </div>
+            <div class="step-time" id="step-time-${s.id}"></div>
+            <div class="step-toggle">▼</div>
+          </div>
+          <div class="step-body">
+            <div class="step-reasoning" id="step-reasoning-${s.id}"></div>
+            <div class="step-summary" id="step-summary-${s.id}" style="display:none;"></div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function setStepStatus(stepId, status) {
+      const el = document.getElementById(`step-${stepId}`);
+      if (!el) return;
+      el.className = `step ${status}`;
+      const icon = el.querySelector('.step-icon');
+      if (status === 'done') icon.textContent = '✓';
+      else if (status === 'error') icon.textContent = '✗';
+      else if (status === 'running') icon.textContent = '⟳';
+    }
+
+    function expandStep(stepId) {
+      const el = document.getElementById(`step-${stepId}`);
+      if (el) {
+        el.classList.add('expanded');
+        document.getElementById(`step-reasoning-${stepId}`).innerHTML = '<span class="cursor"></span>';
+      }
+    }
+
+    function collapseStep(stepId) {
+      const el = document.getElementById(`step-${stepId}`);
+      if (el) {
+        el.classList.remove('expanded');
+        const cursor = document.querySelector(`#step-reasoning-${stepId} .cursor`);
+        if (cursor) cursor.remove();
+      }
+    }
+
+    function toggleStep(stepId) {
+      document.getElementById(`step-${stepId}`)?.classList.toggle('expanded');
+    }
+
+    function appendReasoning(stepId, chunk) {
+      const el = document.getElementById(`step-reasoning-${stepId}`);
+      if (!el) return;
+      const cursor = el.querySelector('.cursor');
+      if (cursor) cursor.insertAdjacentText('beforebegin', chunk);
+      else el.textContent += chunk;
+      el.scrollTop = el.scrollHeight;
+    }
+
+    function setStepTime(stepId) {
+      const start = stepTimers[stepId];
+      if (!start) return;
+      const el = document.getElementById(`step-time-${stepId}`);
+      if (el) el.textContent = `${((Date.now() - start) / 1000).toFixed(1)}s`;
+    }
+
+    function setStepSummary(stepId, result) {
+      const el = document.getElementById(`step-summary-${stepId}`);
+      if (!el) return;
+      let text = '';
+      if (stepId === 'user_state') {
+        const d = result.derived_scores;
+        text = `${result.journey_position} | ${result.current_mode} mode | Travel: ${d.travel_need_score} | Fee sensitivity: ${d.fee_sensitivity_score} | KYC tolerance: ${d.kyc_friction_tolerance}`;
+      } else if (stepId === 'constraint_engine') {
+        text = `${result.feasible.length} feasible, ${result.eliminated.length} eliminated`;
+      } else if (stepId === 'preference_analysis') {
+        const top2 = result.right_now_priorities.slice(0, 2).map(p => `${p.factor} (${(p.weight * 100).toFixed(0)}%)`).join(', ');
+        text = `Top priorities: ${top2} | Friction budget: ${result.friction_budget} | ${result.value_vs_convenience}`;
+      } else if (stepId === 'card_perception') {
+        const top3 = result.cards.slice(0, 3).map(c => `${c.card_name} (${c.composite_score})`).join(', ');
+        text = `Top 3: ${top3}`;
+      } else if (stepId === 'reasoning_ranking') {
+        text = result.head_to_head_summary;
+      } else if (stepId === 'final_action') {
+        text = `Primary: ${result.primary?.card_name || 'N/A'} — see results below`;
+      }
+      if (text) { el.textContent = text; el.style.display = 'block'; }
+    }
+
+    function renderCardMeta(card) {
+      if (!card) return '';
+      let chips = '';
+      try {
+        const types = typeof card.card_type === 'string' ? JSON.parse(card.card_type) : card.card_type;
+        if (types) chips += (Array.isArray(types) ? types : [types]).map(t => `<span class="chip highlight">${t}</span>`).join('');
+      } catch(e) {}
+      const bools = [
+        card.has_physical_card ? '<span class="chip">Physical</span>' : '',
+        card.has_virtual_card ? '<span class="chip">Virtual</span>' : '',
+        card.kyc_required ? '<span class="chip">KYC Required</span>' : '<span class="chip green">No KYC</span>',
+        card.atm_withdrawal_support ? '<span class="chip">ATM</span>' : '',
+        card.apple_wallet_support ? '<span class="chip">Apple Pay</span>' : '',
+        card.google_pay_support ? '<span class="chip">Google Pay</span>' : '',
+        card.wechat_pay_support ? '<span class="chip">WeChat</span>' : '',
+        card.alipay_support ? '<span class="chip">Alipay</span>' : '',
+      ].filter(Boolean).join('');
+      return chips + bools;
+    }
+
+    function renderCardFeatures(card) {
+      if (!card) return '';
+      try {
+        const feats = typeof card.key_features === 'string' ? JSON.parse(card.key_features) : card.key_features;
+        if (feats && feats.length) return `<div class="card-features"><div class="card-features-title">Key Features</div><div class="card-features-list">${feats.map(f => `<span class="feat">${f}</span>`).join('')}</div></div>`;
+      } catch(e) {}
+      return '';
+    }
+
+    function scoreClass(score) { return score >= 80 ? 'high' : score >= 60 ? 'medium' : 'low'; }
+
+    function renderFinalRecommendation(rec, cardsMeta) {
+      const cardsMap = {};
+      (cardsMeta || []).forEach(c => cardsMap[c.id] = c);
+      const p = rec.primary;
+      const pCard = cardsMap[p.card_id] || {};
+
+      const actionIcons = { apply: '→', kyc: '🔐', topup: '💰', explore: '🔍' };
+
+      let html = `
+        <div class="results-title">Recommendation</div>
+
+        <div class="primary-card">
+          <div class="primary-badge">Best Match</div>
+          <div class="card-header">
+            <div class="card-name">${p.card_name}${pCard.vendor ? ` <span style="color:#666;font-weight:400;font-size:0.85rem;">by ${pCard.vendor}</span>` : ''}</div>
+            <div class="card-score ${scoreClass(p.score)}">${p.score}/100</div>
+          </div>
+          <div class="card-tagline">${p.tagline}</div>
+          <div class="card-meta">${renderCardMeta(pCard)}</div>
+          <div class="card-reason">${p.reason}</div>
+          ${renderCardFeatures(pCard)}
+          <div class="card-details">
+            <div class="pros"><h4>Pros</h4><ul>${p.pros.map(x => `<li>${x}</li>`).join('')}</ul></div>
+            <div class="cons"><h4>Cons</h4><ul>${p.cons.map(x => `<li>${x}</li>`).join('')}</ul></div>
+          </div>
+          <div class="next-action">
+            <div class="next-action-icon">${actionIcons[p.next_action?.type] || '→'}</div>
+            <div>
+              <div class="next-action-text">Next Step</div>
+              <div class="next-action-desc">${p.next_action?.description || ''}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="backups-title">Alternatives</div>
+        <div class="backup-cards">
+          ${(rec.backups || []).map(b => {
+            const bCard = cardsMap[b.card_id] || {};
+            return `
+              <div class="backup-card">
+                <div class="card-header">
+                  <div class="card-name">${b.card_name}</div>
+                  <div class="card-score ${scoreClass(b.score)}">${b.score}/100</div>
+                </div>
+                <div class="card-tagline">${b.tagline}</div>
+                <div class="card-meta">${renderCardMeta(bCard)}</div>
+                <div class="card-reason">${b.reason}</div>
+                <div class="pick-this-if"><strong>Pick this if:</strong> ${b.pick_this_if}</div>
+              </div>`;
+          }).join('')}
+        </div>
+      `;
+
+      if (rec.why_not_others && rec.why_not_others.length) {
+        html += `
+          <div class="why-not">
+            <div class="why-not-title visible">Why not these other cards?</div>
+            <div class="why-not-list" id="whyNotList">
+              ${rec.why_not_others.map(w => `<div class="why-not-item"><strong>${w.card_name}:</strong> ${w.reason}</div>`).join('')}
+            </div>
+          </div>
+        `;
+      }
+
+      document.getElementById('resultContent').innerHTML = html;
+      document.getElementById('results').classList.add('visible');
+    }
+
+    init();
+  </script>
+</body>
+</html>
