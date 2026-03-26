@@ -124,6 +124,48 @@
     .error-msg { background: #2a1010; border: 1px solid #5c2020; border-radius: 10px; padding: 1.25rem; color: #f87171; display: none; }
     .error-msg.visible { display: block; }
 
+    /* Feedback buttons */
+    .card-actions { display: flex; gap: 0.5rem; align-items: center; margin-top: 0.75rem; }
+    .fb-btn { padding: 0.4rem 0.75rem; border: 1px solid #333; background: #222; color: #ccc; border-radius: 6px; cursor: pointer; font-size: 0.8rem; transition: all 0.2s; display: inline-flex; align-items: center; gap: 0.3rem; }
+    .fb-btn:hover { border-color: #666; background: #2a2a2a; }
+    .fb-btn.liked { border-color: #1a4a2a; color: #6ee7b7; background: #0a2e1a; }
+    .fb-btn.disliked { border-color: #5c2020; color: #f87171; background: #2a1010; }
+    .fb-btn.open-card { border-color: #7c3aed; color: #c4b5fd; background: #1e1033; }
+    .fb-btn.open-card:hover { background: #2a1a44; }
+
+    /* Open card modal */
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 100; align-items: center; justify-content: center; }
+    .modal-overlay.visible { display: flex; }
+    .modal { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 12px; padding: 1.5rem; width: 90%; max-width: 420px; }
+    .modal h3 { color: #fff; margin-bottom: 1rem; font-size: 1rem; }
+    .modal-step { display: flex; justify-content: space-between; align-items: center; padding: 0.6rem 0; border-bottom: 1px solid #222; }
+    .modal-step-label { color: #ccc; font-size: 0.9rem; }
+    .toggle { position: relative; width: 48px; height: 26px; border-radius: 13px; background: #5c2020; cursor: pointer; transition: background 0.2s; flex-shrink: 0; }
+    .toggle.on { background: #1a4a2a; }
+    .toggle::after { content: ''; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; transition: transform 0.2s; }
+    .toggle.on::after { transform: translateX(22px); }
+    .toggle-label { font-size: 0.75rem; margin-left: 0.5rem; min-width: 30px; }
+    .toggle-label.fail { color: #f87171; }
+    .toggle-label.pass { color: #6ee7b7; }
+    .modal-actions { display: flex; gap: 0.5rem; margin-top: 1.25rem; }
+    .modal-btn { flex: 1; padding: 0.6rem; border: none; border-radius: 6px; font-size: 0.85rem; cursor: pointer; font-weight: 500; }
+    .modal-btn.submit { background: #7c3aed; color: #fff; }
+    .modal-btn.submit:hover { background: #6d28d9; }
+    .modal-btn.cancel { background: #333; color: #ccc; }
+    .modal-btn.cancel:hover { background: #444; }
+
+    /* Opening result display */
+    .opening-result { margin-top: 1rem; padding: 1rem; border-radius: 8px; }
+    .opening-result.success { background: #0a2e1a; border: 1px solid #1a4a2a; }
+    .opening-result.failure { background: #2a1010; border: 1px solid #5c2020; }
+    .opening-result h4 { margin-bottom: 0.5rem; font-size: 0.9rem; }
+    .opening-result.success h4 { color: #6ee7b7; }
+    .opening-result.failure h4 { color: #f87171; }
+    .opening-steps { display: flex; gap: 1rem; margin-bottom: 0.5rem; }
+    .opening-step { font-size: 0.82rem; display: flex; align-items: center; gap: 0.3rem; }
+    .opening-step.pass { color: #6ee7b7; }
+    .opening-step.fail { color: #f87171; }
+
     /* ---- Mobile responsive ---- */
     @media (max-width: 640px) {
       body { padding: 1rem; }
@@ -210,9 +252,46 @@
     <div id="resultContent"></div>
   </div>
 
+  <!-- Open Card Modal -->
+  <div class="modal-overlay" id="openCardModal">
+    <div class="modal">
+      <h3 id="modalCardName">Open Card</h3>
+      <div class="modal-step">
+        <span class="modal-step-label">KYC Verification</span>
+        <div style="display:flex;align-items:center;">
+          <div class="toggle on" id="toggleKyc" onclick="toggleSwitch('toggleKyc')"></div>
+          <span class="toggle-label pass" id="toggleKycLabel">Pass</span>
+        </div>
+      </div>
+      <div class="modal-step">
+        <span class="modal-step-label">Top-up</span>
+        <div style="display:flex;align-items:center;">
+          <div class="toggle on" id="toggleTopup" onclick="toggleSwitch('toggleTopup')"></div>
+          <span class="toggle-label pass" id="toggleTopupLabel">Pass</span>
+        </div>
+      </div>
+      <div class="modal-step">
+        <span class="modal-step-label">Approval</span>
+        <div style="display:flex;align-items:center;">
+          <div class="toggle on" id="toggleApproval" onclick="toggleSwitch('toggleApproval')"></div>
+          <span class="toggle-label pass" id="toggleApprovalLabel">Pass</span>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="modal-btn cancel" onclick="closeModal()">Cancel</button>
+        <button class="modal-btn submit" onclick="submitOpenCard()">Submit</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     let users = [];
     let currentEventSource = null;
+    let currentUserId = null;
+    let currentBaseRec = null;
+    let lastCardsMeta = null;
+    let openCardTargetId = null;
+    let openCardTargetName = null;
     const stepTimers = {};
 
     async function init() {
@@ -229,6 +308,7 @@
     }
 
     function selectUser(id) {
+      currentUserId = id;
       const user = users.find(u => u.id === id);
       document.querySelectorAll('.user-btn').forEach((btn, i) => {
         btn.classList.toggle('active', users[i].id === id);
@@ -351,6 +431,8 @@
 
       currentEventSource.addEventListener('pipeline_done', (e) => {
         const { recommendation, cards } = JSON.parse(e.data);
+        currentBaseRec = recommendation;
+        lastCardsMeta = cards;
         renderFinalRecommendation(recommendation, cards);
         currentEventSource.close();
       });
@@ -501,8 +583,8 @@
           <div class="card-reason">${p.reason}</div>
           ${renderCardFeatures(pCard)}
           <div class="card-details">
-            <div class="pros"><h4>Pros</h4><ul>${p.pros.map(x => `<li>${x}</li>`).join('')}</ul></div>
-            <div class="cons"><h4>Cons</h4><ul>${p.cons.map(x => `<li>${x}</li>`).join('')}</ul></div>
+            <div class="pros"><h4>Pros</h4><ul>${(p.pros||[]).map(x => `<li>${x}</li>`).join('')}</ul></div>
+            <div class="cons"><h4>Cons</h4><ul>${(p.cons||[]).map(x => `<li>${x}</li>`).join('')}</ul></div>
           </div>
           <div class="next-action">
             <div class="next-action-icon">${actionIcons[p.next_action?.type] || '→'}</div>
@@ -511,6 +593,12 @@
               <div class="next-action-desc">${p.next_action?.description || ''}</div>
             </div>
           </div>
+          <div class="card-actions">
+            <button class="fb-btn" onclick="feedbackCard(${p.card_id}, 'like', this)">👍 Like</button>
+            <button class="fb-btn" onclick="feedbackCard(${p.card_id}, 'dislike', this)">👎 Dislike</button>
+            <button class="fb-btn open-card" onclick="openCardModal(${p.card_id}, '${p.card_name.replace(/'/g, "\\'")}')">🃏 Open Card</button>
+          </div>
+          <div id="openingResult-${p.card_id}"></div>
         </div>
 
         <div class="backups-title">Alternatives</div>
@@ -527,6 +615,10 @@
                 <div class="card-meta">${renderCardMeta(bCard)}</div>
                 <div class="card-reason">${b.reason}</div>
                 <div class="pick-this-if"><strong>Pick this if:</strong> ${b.pick_this_if}</div>
+                <div class="card-actions">
+                  <button class="fb-btn" onclick="feedbackCard(${b.card_id}, 'like', this)">👍</button>
+                  <button class="fb-btn" onclick="feedbackCard(${b.card_id}, 'dislike', this)">👎</button>
+                </div>
               </div>`;
           }).join('')}
         </div>
@@ -545,6 +637,110 @@
 
       document.getElementById('resultContent').innerHTML = html;
       document.getElementById('results').classList.add('visible');
+    }
+
+    // ---- Feedback functions ----
+
+    async function feedbackCard(cardId, action, btn) {
+      try {
+        const res = await fetch('/api/feedback/card', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user_id: currentUserId,
+            card_id: cardId,
+            action,
+            base_recommendation: currentBaseRec,
+          }),
+        });
+        const data = await res.json();
+
+        if (action === 'like') {
+          btn.classList.add('liked');
+        } else if (action === 'dislike' && data.recommendation) {
+          // Re-render with updated recommendation
+          renderFinalRecommendation(data.recommendation, lastCardsMeta);
+        }
+      } catch (err) {
+        console.error('Feedback error:', err);
+      }
+    }
+
+    function openCardModal(cardId, cardName) {
+      openCardTargetId = cardId;
+      openCardTargetName = cardName;
+      document.getElementById('modalCardName').textContent = `Open Card: ${cardName}`;
+      // Reset toggles to "on" (pass)
+      ['toggleKyc', 'toggleTopup', 'toggleApproval'].forEach(id => {
+        document.getElementById(id).classList.add('on');
+        document.getElementById(id + 'Label').textContent = 'Pass';
+        document.getElementById(id + 'Label').className = 'toggle-label pass';
+      });
+      document.getElementById('openCardModal').classList.add('visible');
+    }
+
+    function closeModal() {
+      document.getElementById('openCardModal').classList.remove('visible');
+    }
+
+    function toggleSwitch(id) {
+      const el = document.getElementById(id);
+      const label = document.getElementById(id + 'Label');
+      el.classList.toggle('on');
+      const isOn = el.classList.contains('on');
+      label.textContent = isOn ? 'Pass' : 'Fail';
+      label.className = `toggle-label ${isOn ? 'pass' : 'fail'}`;
+    }
+
+    async function submitOpenCard() {
+      const kyc = document.getElementById('toggleKyc').classList.contains('on');
+      const topup = document.getElementById('toggleTopup').classList.contains('on');
+      const approval = document.getElementById('toggleApproval').classList.contains('on');
+
+      closeModal();
+
+      try {
+        const res = await fetch('/api/feedback/open-card', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user_id: currentUserId,
+            card_id: openCardTargetId,
+            card_name: openCardTargetName,
+            kyc_success: kyc,
+            topup_success: topup,
+            approval: approval,
+            base_recommendation: currentBaseRec,
+          }),
+        });
+        const data = await res.json();
+        const allPass = kyc && topup && approval;
+
+        // Show result in the opening result area
+        const resultEl = document.getElementById(`openingResult-${openCardTargetId}`);
+        if (resultEl) {
+          resultEl.innerHTML = `
+            <div class="opening-result ${allPass ? 'success' : 'failure'}">
+              <h4>${allPass ? 'Card Opened Successfully!' : 'Card Opening Failed'}</h4>
+              <div class="opening-steps">
+                <span class="opening-step ${kyc ? 'pass' : 'fail'}">${kyc ? '✓' : '✗'} KYC</span>
+                <span class="opening-step ${topup ? 'pass' : 'fail'}">${topup ? '✓' : '✗'} Top-up</span>
+                <span class="opening-step ${approval ? 'pass' : 'fail'}">${approval ? '✓' : '✗'} Approval</span>
+              </div>
+              ${!allPass && data.recommendation ? '<p style="color:#aaa;font-size:0.82rem;">Recommendation adjusted — see updated results above.</p>' : ''}
+            </div>
+          `;
+        }
+
+        // If there's a failure and we got an updated recommendation, re-render
+        if (!allPass && data.recommendation) {
+          setTimeout(() => {
+            renderFinalRecommendation(data.recommendation, lastCardsMeta);
+          }, 1500);
+        }
+      } catch (err) {
+        console.error('Open card error:', err);
+      }
     }
 
     init();

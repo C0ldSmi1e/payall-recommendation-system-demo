@@ -11,6 +11,7 @@ import type {
   RankingResult,
   FinalRecommendation,
 } from "./types";
+import { applyFeedbackOverrides } from "./feedback";
 import {
   STEP1_SYSTEM,
   buildStep1Prompt,
@@ -208,5 +209,8 @@ export async function runPipeline(
       general_ratings: c.general_ratings,
     }));
 
-  send("pipeline_done", { recommendation: finalRec, cards: recCards });
+  // Apply feedback overrides (disliked cards, failed openings)
+  const finalWithFeedback = applyFeedbackOverrides(user.id, finalRec);
+
+  send("pipeline_done", { recommendation: finalWithFeedback, cards: recCards });
 }

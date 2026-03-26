@@ -1,5 +1,11 @@
 import { users } from "./users";
 import { runPipeline } from "./pipeline";
+import {
+  recordCardFeedback,
+  recordOpeningResult,
+  applyFeedbackOverrides,
+  getUserFeedback,
+} from "./feedback";
 import type { Card } from "./types";
 
 const cards: Card[] = await Bun.file("./cards.json").json();
@@ -56,6 +62,59 @@ const server = Bun.serve({
           Connection: "keep-alive",
         },
       });
+    }
+
+    // Like/dislike a card
+    if (url.pathname === "/api/feedback/card" && req.method === "POST") {
+      const body = await req.json() as {
+        user_id: string;
+        card_id: number;
+        action: "like" | "dislike";
+        base_recommendation?: any;
+      };
+      await recordCardFeedback(body.user_id, body.card_id, body.action);
+
+      // If base recommendation provided, recompute overrides
+      let updated = null;
+      if (body.base_recommendation) {
+        updated = applyFeedbackOverrides(body.user_id, body.base_recommendation);
+      }
+      return Response.json({ ok: true, recommendation: updated });
+    }
+
+    // Simulate card opening
+    if (url.pathname === "/api/feedback/open-card" && req.method === "POST") {
+      const body = await req.json() as {
+        user_id: string;
+        card_id: number;
+        card_name: string;
+        kyc_success: boolean;
+        topup_success: boolean;
+        approval: boolean;
+        base_recommendation?: any;
+      };
+
+      const result = await recordOpeningResult(
+        body.user_id,
+        body.card_id,
+        body.card_name,
+        body.kyc_success,
+        body.topup_success,
+        body.approval
+      );
+
+      let updated = null;
+      if (body.base_recommendation) {
+        updated = applyFeedbackOverrides(body.user_id, body.base_recommendation);
+      }
+      return Response.json({ ok: true, result, recommendation: updated });
+    }
+
+    // Get feedback history
+    if (url.pathname === "/api/feedback/history") {
+      const userId = url.searchParams.get("userId");
+      if (!userId) return Response.json({ error: "Missing userId" }, { status: 400 });
+      return Response.json(getUserFeedback(userId));
     }
 
     return new Response("Not found", { status: 404 });

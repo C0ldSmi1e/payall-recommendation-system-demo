@@ -1,0 +1,126 @@
+{
+  "card_feedbacks": [
+    {
+      "user_id": "6",
+      "card_id": 23,
+      "action": "dislike",
+      "timestamp": 1774562666904
+    },
+    {
+      "user_id": "1",
+      "card_id": 35,
+      "action": "like",
+      "timestamp": 1774563161294
+    },
+    {
+      "user_id": "1",
+      "card_id": 35,
+      "action": "dislike",
+      "timestamp": 1774563163246
+    },
+    {
+      "user_id": "1",
+      "card_id": 5,
+      "action": "dislike",
+      "timestamp": 1774563195659
+    },
+    {
+      "user_id": "3",
+      "card_id": 35,
+      "action": "dislike",
+      "timestamp": 1774563510031
+    }
+  ],
+  "opening_results": [
+    {
+      "user_id": "1",
+      "card_id": 5,
+      "card_name": "Coinbase One",
+      "kyc_success": true,
+      "topup_success": true,
+      "approval": true,
+      "timestamp": 1774563176830
+    },
+    {
+      "user_id": "1",
+      "card_id": 5,
+      "card_name": "Coinbase One",
+      "kyc_success": false,
+      "topup_success": true,
+      "approval": true,
+      "timestamp": 1774563182109
+    },
+    {
+      "user_id": "1",
+      "card_id": 5,
+      "card_name": "Coinbase One",
+      "kyc_success": true,
+      "topup_success": false,
+      "approval": false,
+      "timestamp": 1774563189048
+    },
+    {
+      "user_id": "1",
+      "card_id": 41,
+      "card_name": "Ether.fi Cash",
+      "kyc_success": false,
+      "topup_success": true,
+      "approval": true,
+      "timestamp": 1774563199314
+    },
+    {
+      "user_id": "1",
+      "card_id": 41,
+      "card_name": "Ether.fi Cash",
+      "kyc_success": false,
+      "topup_success": true,
+      "approval": true,
+      "timestamp": 1774563204258
+    },
+    {
+      "user_id": "1",
+      "card_id": 41,
+      "card_name": "Ether.fi Cash",
+      "kyc_success": true,
+      "topup_success": true,
+      "approval": false,
+      "timestamp": 1774563265703
+    },
+    {
+      "user_id": "3",
+      "card_id": 35,
+      "card_name": "Gemini",
+      "kyc_success": true,
+      "topup_success": true,
+      "approval": false,
+      "timestamp": 1774563459125
+    },
+    {
+      "user_id": "3",
+      "card_id": 56,
+      "card_name": "Krak",
+      "kyc_success": true,
+      "topup_success": true,
+      "approval": false,
+      "timestamp": 1774563476283
+    },
+    {
+      "user_id": "3",
+      "card_id": 35,
+      "card_name": "Gemini",
+      "kyc_success": false,
+      "topup_success": true,
+      "approval": true,
+      "timestamp": 1774563489250
+    },
+    {
+      "user_id": "3",
+      "card_id": 35,
+      "card_name": "Gemini",
+      "kyc_success": true,
+      "topup_success": false,
+      "approval": true,
+      "timestamp": 1774563500400
+    }
+  ]
+}

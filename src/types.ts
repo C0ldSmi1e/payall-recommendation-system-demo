@@ -201,3 +201,27 @@ export interface FinalRecommendation {
 
 // SSE send function type
 export type SendFn = (event: string, data: unknown) => void;
+
+// ---- Feedback Layer ----
+
+export interface CardFeedback {
+  user_id: string;
+  card_id: number;
+  action: "like" | "dislike";
+  timestamp: number;
+}
+
+export interface CardOpeningResult {
+  user_id: string;
+  card_id: number;
+  card_name: string;
+  kyc_success: boolean;
+  topup_success: boolean;
+  approval: boolean;
+  timestamp: number;
+}
+
+export interface FeedbackStore {
+  card_feedbacks: CardFeedback[];
+  opening_results: CardOpeningResult[];
+}

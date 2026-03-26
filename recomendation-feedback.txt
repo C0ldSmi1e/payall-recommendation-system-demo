@@ -1,0 +1,649 @@
+可以，今天就做的话，**不要重做推荐系统**。
+你现在这套 Bun + SSE + 6 步 pipeline 已经能产出“今日最佳卡”，最简洁且效果最好的办法是：
+
+# 在现有推荐结果后面，加一个 **Feedback Override Layer**
+
+也就是：
+
+```text id="8c184u"
+基础推荐器（现有） -> 产出今日最佳卡
+反馈层（新增） -> 根据刚发生的关键事件改写 next_action，必要时切换主推卡
+前端 -> 只展示“被反馈修正后的最终结果”
+```
+
+这样今天就能上线，而且反馈效果会非常明显。
+
+---
+
+# 一、基于你当前项目的最简架构
+
+你现在项目结构大概是：
+
+* `src/server.ts`：Bun API + SSE
+* `src/pipeline.ts`：6 步推荐流程
+* `src/types.ts`：类型
+* `src/index.html`：前端展示
+
+今天新增 1 个核心模块就够：
+
+## 新增文件
+
+```text id="lr1in4"
+src/feedback.ts
+```
+
+## 只改 3 个文件
+
+```text id="g1uy95"
+src/types.ts
+src/pipeline.ts
+src/server.ts
+```
+
+如果前端要马上看到变化，再小改：
+
+```text id="o9aj5x"
+src/index.html
+```
+
+---
+
+# 二、今天版的核心思想
+
+## 不重跑整个 pipeline
+
+你的 pipeline 现在是：
+
+* User State Analysis
+* Constraint Engine
+* Preference Analysis
+* Card Perception
+* Ranking
+* Final Recommendation
+
+它很重，而且要走 LLM。
+**反馈系统今天不要每次事件都重跑它。**
+
+### 正确做法
+
+只做两层状态：
+
+## 1. Base Recommendation
+
+由现有 pipeline 产出，代表“当前大方向最优解”
+
+## 2. Feedback Override
+
+根据刚发生的事，立刻改：
+
+* `primary.next_action`
+* `primary.reason`
+* 必要时切换 `primary` 和 `backup`
+
+---
+
+# 三、今天必须有的 4 个数据对象
+
+今天先别上复杂数据库设计。
+如果只是先把系统做出来，**内存 Map 就能跑**。
+如果你要直接挂生产，再把同样接口换 Redis。
+
+## 1. feedback_event
+
+存所有关键反馈事件
+
+## 2. user_hot_state
+
+存“当前最影响推荐的热状态”
+
+## 3. action_cooldown
+
+存失败动作冷却
+
+## 4. recommendation_snapshot
+
+存最终给前端展示的推荐快照
+
+---
+
+# 四、今天版最小类型设计
+
+## 在 `src/types.ts` 里补这几类
+
+```ts id="yw7l2r"
+export type FeedbackEventType =
+  | "application_started"
+  | "application_abandoned"
+  | "kyc_blocked"
+  | "kyc_approved"
+  | "application_rejected"
+  | "topup_started"
+  | "topup_failed"
+  | "topup_succeeded"
+  | "low_balance_detected"
+  | "cashout_failed"
+  | "cashout_succeeded";
+
+export interface FeedbackEvent {
+  user_id: string;
+  event_type: FeedbackEventType;
+  payload?: Record<string, any>;
+  created_at: number;
+}
+
+export interface UserHotState {
+  user_id: string;
+  current_intent?: string;
+  kyc_stage?: "not_started" | "in_progress" | "blocked" | "approved" | "rejected";
+  current_blocker?: string;
+  balance_risk?: "normal" | "low";
+  last_failed_card_id?: number;
+  last_failed_route?: string;
+  ignore_count?: number;
+  version: number;
+  updated_at: number;
+}
+
+export interface RecommendationSnapshot {
+  user_id: string;
+  base_recommendation: FinalRecommendation;
+  final_recommendation: FinalRecommendation;
+  state_version: number;
+  updated_at: number;
+}
+```
+
+---
+
+# 五、今天新增 `src/feedback.ts`
+
+这个文件是整个系统的核心。
+
+## 5.1 先用内存存储
+
+今天最快：
+
+```ts id="pt8t62"
+const hotStateStore = new Map<string, UserHotState>();
+const snapshotStore = new Map<string, RecommendationSnapshot>();
+const cooldownStore = new Map<string, Record<string, number>>();
+const eventLog: FeedbackEvent[] = [];
+```
+
+如果你今晚想直接换 Redis，也只要把这些 Map 换成 Redis 读写，不用改业务逻辑。
+
+---
+
+## 5.2 核心函数 1：写事件
+
+```ts id="tpm8e4"
+export function ingestFeedbackEvent(evt: FeedbackEvent) {
+  eventLog.push(evt);
+  const prev = hotStateStore.get(evt.user_id) || {
+    user_id: evt.user_id,
+    version: 0,
+    updated_at: Date.now(),
+  };
+
+  const next = reduceHotState(prev, evt);
+  hotStateStore.set(evt.user_id, next);
+  return next;
+}
+```
+
+---
+
+## 5.3 核心函数 2：热状态归约器
+
+这一步只处理“推荐现在会不会变”。
+
+```ts id="7w7x4s"
+function reduceHotState(prev: UserHotState, evt: FeedbackEvent): UserHotState {
+  const next: UserHotState = {
+    ...prev,
+    version: (prev.version || 0) + 1,
+    updated_at: Date.now(),
+  };
+
+  switch (evt.event_type) {
+    case "application_started":
+      next.kyc_stage = "in_progress";
+      break;
+
+    case "application_abandoned":
+      next.kyc_stage = "in_progress";
+      next.current_blocker = "abandoned";
+      break;
+
+    case "kyc_blocked":
+      next.kyc_stage = "blocked";
+      next.current_blocker = evt.payload?.reason || "missing_document";
+      break;
+
+    case "kyc_approved":
+      next.kyc_stage = "approved";
+      next.current_blocker = undefined;
+      break;
+
+    case "application_rejected":
+      next.kyc_stage = "rejected";
+      next.last_failed_card_id = evt.payload?.card_id;
+      break;
+
+    case "topup_failed":
+      next.last_failed_card_id = evt.payload?.card_id;
+      next.last_failed_route = evt.payload?.route;
+      break;
+
+    case "topup_succeeded":
+      next.balance_risk = "normal";
+      break;
+
+    case "low_balance_detected":
+      next.balance_risk = "low";
+      break;
+
+    case "cashout_failed":
+      next.current_blocker = "cashout_failed";
+      break;
+
+    case "cashout_succeeded":
+      if (next.current_blocker === "cashout_failed") next.current_blocker = undefined;
+      break;
+  }
+
+  return next;
+}
+```
+
+---
+
+## 5.4 核心函数 3：动作冷却
+
+```ts id="7nq8wy"
+function setCooldown(userId: string, actionKey: string, seconds: number) {
+  const current = cooldownStore.get(userId) || {};
+  current[actionKey] = Math.floor(Date.now() / 1000) + seconds;
+  cooldownStore.set(userId, current);
+}
+
+function isCooling(userId: string, actionKey: string) {
+  const current = cooldownStore.get(userId) || {};
+  const until = current[actionKey];
+  return until && until > Math.floor(Date.now() / 1000);
+}
+```
+
+### 今天先做 3 条冷却规则
+
+* `topup_failed`：该路径冷却 30 分钟
+* `application_rejected`：该卡冷却 24 小时
+* `cashout_failed`：该路径冷却 30 分钟
+
+---
+
+## 5.5 核心函数 4：反馈改写器
+
+这是今天最值钱的函数。
+
+```ts id="g8sv4v"
+export function applyFeedbackOverrides(
+  userId: string,
+  base: FinalRecommendation
+): FinalRecommendation {
+  const hot = hotStateStore.get(userId);
+  if (!hot) return base;
+
+  const next: FinalRecommendation = JSON.parse(JSON.stringify(base));
+
+  if (hot.kyc_stage === "blocked") {
+    next.primary.next_action = {
+      type: "resume_kyc",
+      description: "补充资料后继续申请",
+    };
+    next.primary.reason = "你的申请卡在补件阶段，先补资料是当前最短路径。";
+    return next;
+  }
+
+  if (hot.kyc_stage === "approved") {
+    next.primary.next_action = {
+      type: "topup_card",
+      description: "先充值 $100 完成首刷",
+    };
+    next.primary.reason = "卡已通过，当前最优动作是先完成首刷闭环。";
+    return next;
+  }
+
+  if (hot.balance_risk === "low") {
+    next.primary.next_action = {
+      type: "topup_card",
+      description: "主力卡余额偏低，先补余额",
+    };
+    next.primary.reason = "当前主力卡余额不足，先补余额比换卡更优。";
+    return next;
+  }
+
+  if (hot.last_failed_route) {
+    const actionKey = `topup:${next.primary.card_id}:${hot.last_failed_route}`;
+    if (isCooling(userId, actionKey)) {
+      next.primary.next_action = {
+        type: "switch_topup_route",
+        description: "当前路径失败，改用备用充值路径",
+      };
+      next.primary.reason = "刚才的充值路径失败，系统已切换到更稳的路径。";
+      return next;
+    }
+  }
+
+  if (hot.kyc_stage === "rejected" && next.backups.length > 0) {
+    const backup = next.backups[0];
+    next.primary = {
+      card_id: backup.card_id,
+      card_name: backup.card_name,
+      score: backup.score,
+      tagline: backup.tagline,
+      reason: "主推卡刚被拒，切到当前最接近需求的备选方案。",
+      pros: [],
+      cons: [],
+      next_action: {
+        type: "start_backup_application",
+        description: `改为申请 ${backup.card_name}`,
+      },
+    };
+    return next;
+  }
+
+  return next;
+}
+```
+
+---
+
+# 六、怎么接进你现有 pipeline
+
+你现在 `pipeline.ts` 最后是：
+
+```ts id="s6cpy5"
+send("pipeline_done", { recommendation: finalRec, cards: recCards });
+```
+
+今天只改成：
+
+```ts id="5lid2k"
+import { saveRecommendationSnapshot, applyFeedbackOverrides } from "./feedback";
+
+const finalWithFeedback = applyFeedbackOverrides(user.id, finalRec);
+
+saveRecommendationSnapshot(user.id, finalRec, finalWithFeedback);
+
+send("pipeline_done", {
+  recommendation: finalWithFeedback,
+  cards: recCards,
+});
+```
+
+这样好处是：
+
+* 现有推荐逻辑完全不动
+* 只是最后一层加反馈修正
+* 前端继续吃同样结构的 `FinalRecommendation`
+
+这就是今天最省事的接法。
+
+---
+
+# 七、`server.ts` 今天要加两个接口
+
+## 7.1 接受反馈事件
+
+```ts id="ucdvrh"
+if (url.pathname === "/api/feedback/event" && req.method === "POST") {
+  const body = await req.json();
+  const hotState = ingestFeedbackEvent({
+    user_id: body.user_id,
+    event_type: body.event_type,
+    payload: body.payload || {},
+    created_at: Date.now(),
+  });
+
+  if (body.event_type === "topup_failed" && body.payload?.route && body.payload?.card_id) {
+    setCooldown(body.user_id, `topup:${body.payload.card_id}:${body.payload.route}`, 1800);
+  }
+
+  if (body.event_type === "application_rejected" && body.payload?.card_id) {
+    setCooldown(body.user_id, `apply:${body.payload.card_id}`, 86400);
+  }
+
+  const snapshot = rewriteSnapshot(body.user_id);
+  return Response.json({
+    ok: true,
+    state_version: hotState.version,
+    recommendation: snapshot?.final_recommendation || null,
+  });
+}
+```
+
+## 7.2 读当前推荐快照
+
+```ts id="g1ibw4"
+if (url.pathname === "/api/recommendation/current") {
+  const userId = url.searchParams.get("userId");
+  if (!userId) return Response.json({ error: "Missing userId" }, { status: 400 });
+
+  const snapshot = getRecommendationSnapshot(userId);
+  return Response.json(snapshot || null);
+}
+```
+
+---
+
+# 八、`feedback.ts` 还要两个辅助函数
+
+```ts id="0n2yge"
+export function saveRecommendationSnapshot(
+  userId: string,
+  base: FinalRecommendation,
+  final: FinalRecommendation
+) {
+  const hot = hotStateStore.get(userId);
+  snapshotStore.set(userId, {
+    user_id: userId,
+    base_recommendation: base,
+    final_recommendation: final,
+    state_version: hot?.version || 0,
+    updated_at: Date.now(),
+  });
+}
+
+export function getRecommendationSnapshot(userId: string) {
+  return snapshotStore.get(userId);
+}
+
+export function rewriteSnapshot(userId: string) {
+  const snapshot = snapshotStore.get(userId);
+  if (!snapshot) return null;
+
+  const final = applyFeedbackOverrides(userId, snapshot.base_recommendation);
+  const next = {
+    ...snapshot,
+    final_recommendation: final,
+    state_version: (hotStateStore.get(userId)?.version || snapshot.state_version),
+    updated_at: Date.now(),
+  };
+
+  snapshotStore.set(userId, next);
+  return next;
+}
+```
+
+---
+
+# 九、前端今天只改一件事
+
+当前前端已经在跑 SSE pipeline。
+今天不用大改 UI，只要：
+
+## 在关键动作发生后调用：
+
+```text id="ieb6mt"
+POST /api/feedback/event
+```
+
+然后拿返回的新 recommendation，直接替换当前结果区域。
+
+### 最关键的 4 个前端触发点
+
+* 用户开始申请
+* 用户申请中断
+* 充值失败
+* 充值成功
+
+如果暂时接不到真实回调，前端先用模拟按钮触发都行。
+
+---
+
+# 十、今天最优先做的 5 个反馈场景
+
+今天不要贪多，把这 5 个场景做对，用户就会明显感觉“系统在根据我发生的事改口”。
+
+## 1. KYC 补件
+
+事件：
+
+```json id="hxwp74"
+{ "event_type": "kyc_blocked", "payload": { "reason": "address_proof_missing" } }
+```
+
+效果：
+
+* 主推卡不变
+* `next_action = 补充资料后继续申请`
+
+---
+
+## 2. KYC 通过
+
+事件：
+
+```json id="lu26mi"
+{ "event_type": "kyc_approved" }
+```
+
+效果：
+
+* `next_action = 先充值 $100 完成首刷`
+
+---
+
+## 3. 充值失败
+
+事件：
+
+```json id="9dzbrj"
+{ "event_type": "topup_failed", "payload": { "card_id": 3, "route": "usdt_main" } }
+```
+
+效果：
+
+* 该路径冷却 30 分钟
+* `next_action = 改用备用充值路径`
+
+---
+
+## 4. 余额不足
+
+事件：
+
+```json id="bz8mtx"
+{ "event_type": "low_balance_detected" }
+```
+
+效果：
+
+* `next_action = 主力卡余额偏低，先补余额`
+
+---
+
+## 5. 主推卡被拒
+
+事件：
+
+```json id="5c7u7z"
+{ "event_type": "application_rejected", "payload": { "card_id": 5 } }
+```
+
+效果：
+
+* 主推切到 `backup[0]`
+* 动作改成 `改为申请备选卡`
+
+---
+
+# 十一、今天的实现顺序
+
+## 先做这 6 步
+
+### 第 1 步
+
+在 `types.ts` 加 4 个 feedback 相关类型
+
+### 第 2 步
+
+新建 `src/feedback.ts`
+先用 Map 存储，别上 Redis
+
+### 第 3 步
+
+在 `pipeline.ts` 末尾接 `applyFeedbackOverrides()`
+
+### 第 4 步
+
+在 `server.ts` 加：
+
+* `POST /api/feedback/event`
+* `GET /api/recommendation/current`
+
+### 第 5 步
+
+前端关键动作后刷新 recommendation
+
+### 第 6 步
+
+手测 5 个场景
+
+---
+
+# 十二、今天不要做的东西
+
+为了今晚能做出来，下面这些先别碰：
+
+* 不要上 Redis Stream / MQ
+* 不要做 bandit
+* 不要做 LP
+* 不要重训模型
+* 不要让 LLM 参与热反馈改写
+* 不要重构 pipeline 6 步结构
+
+今天只做：
+
+# **Base Recommendation + Feedback Override**
+
+---
+
+# 十三、你今天上线后的效果会是什么
+
+用户今天会直接感觉到：
+
+* 不是推荐完就死了
+* 他一失败，系统立刻改建议
+* 他一通过，系统立刻切到下一步
+* 不是一张卡推荐到底，而是会恢复、会切路、会续上
+
+这就是 PayAll 在今天能做出来的**最好反馈效果**。
+
+---
+
+如果你愿意，我下一条可以直接给你：
+
+**`src/feedback.ts` 的完整可贴进去版本**
+按你这个 Bun 项目结构写。
