@@ -49,7 +49,6 @@ export function getDislikedCardIds(userId: string): Set<number> {
   const liked = new Set<number>();
   const disliked = new Set<number>();
 
-  // Process in order — later actions override earlier ones
   for (const fb of store.card_feedbacks) {
     if (fb.user_id !== userId) continue;
     if (fb.action === "dislike") {
@@ -61,16 +60,6 @@ export function getDislikedCardIds(userId: string): Set<number> {
     }
   }
   return disliked;
-}
-
-export function getLikedCardIds(userId: string): Set<number> {
-  const liked = new Set<number>();
-  for (const fb of store.card_feedbacks) {
-    if (fb.user_id !== userId) continue;
-    if (fb.action === "like") liked.add(fb.card_id);
-    else liked.delete(fb.card_id);
-  }
-  return liked;
 }
 
 // ---- Card Opening Results ----
@@ -97,109 +86,117 @@ export async function recordOpeningResult(
   return result;
 }
 
-export function getLastOpeningResult(
-  userId: string,
-  cardId: number
-): CardOpeningResult | undefined {
-  // Return most recent result for this user+card
-  for (let i = store.opening_results.length - 1; i >= 0; i--) {
-    const r = store.opening_results[i];
-    if (r.user_id === userId && r.card_id === cardId) return r;
-  }
-  return undefined;
-}
-
-function getLatestFailedOpening(
-  userId: string
-): CardOpeningResult | undefined {
-  for (let i = store.opening_results.length - 1; i >= 0; i--) {
-    const r = store.opening_results[i];
-    if (
-      r.user_id === userId &&
-      (!r.kyc_success || !r.topup_success || !r.approval)
-    ) {
-      return r;
+function getRejectedCardIds(userId: string): Set<number> {
+  const rejected = new Set<number>();
+  for (const r of store.opening_results) {
+    if (r.user_id === userId && !r.approval) {
+      rejected.add(r.card_id);
     }
   }
-  return undefined;
+  return rejected;
 }
 
-// ---- Feedback Override Logic ----
+// ---- Quick-fix overrides (KYC/topup failures only) ----
+// Dislike and approval rejection are handled by re-ranking (LLM), not here.
 
-export function applyFeedbackOverrides(
+export function applyQuickFixOverrides(
   userId: string,
   base: FinalRecommendation
 ): FinalRecommendation {
   const next: FinalRecommendation = JSON.parse(JSON.stringify(base));
-  const disliked = getDislikedCardIds(userId);
 
-  // Remove disliked cards from backups
-  next.backups = next.backups.filter((b) => !disliked.has(b.card_id));
+  // Find latest failed opening for the primary card
+  for (let i = store.opening_results.length - 1; i >= 0; i--) {
+    const r = store.opening_results[i];
+    if (r.user_id !== userId || r.card_id !== next.primary.card_id) continue;
 
-  // If primary is disliked, swap to first backup
-  if (disliked.has(next.primary.card_id) && next.backups.length > 0) {
-    const replacement = next.backups.shift()!;
-    next.primary = {
-      card_id: replacement.card_id,
-      card_name: replacement.card_name,
-      score: replacement.score,
-      tagline: replacement.tagline,
-      reason: replacement.reason,
-      pros: [],
-      cons: [],
-      next_action: {
-        type: "apply",
-        description: `Apply for ${replacement.card_name}`,
-      },
-    };
-  }
-
-  // Check for failed card openings on the current primary
-  const failedOpening = getLatestFailedOpening(userId);
-  if (failedOpening && failedOpening.card_id === next.primary.card_id) {
-    if (!failedOpening.kyc_success) {
+    if (!r.kyc_success) {
       next.primary.next_action = {
         type: "kyc",
-        description: "KYC verification failed — retry or submit additional documents",
+        description:
+          "KYC verification failed — retry or submit additional documents",
       };
       next.primary.reason =
         "Your KYC verification didn't pass for this card. You can retry with corrected documents, or try an alternative card below.";
-    } else if (!failedOpening.topup_success) {
+    } else if (!r.topup_success) {
       next.primary.next_action = {
         type: "topup",
         description: "Top-up failed — try a different funding route",
       };
       next.primary.reason =
         "Card was approved but top-up failed. Try a different funding method or route.";
-    } else if (!failedOpening.approval) {
-      // Card application rejected — swap to backup
-      if (next.backups.length > 0) {
-        const replacement = next.backups.shift()!;
-        next.primary = {
-          card_id: replacement.card_id,
-          card_name: replacement.card_name,
-          score: replacement.score,
-          tagline: replacement.tagline,
-          reason: `${failedOpening.card_name} application was not approved. Switching to the best alternative.`,
-          pros: [],
-          cons: [],
-          next_action: {
-            type: "apply",
-            description: `Apply for ${replacement.card_name} instead`,
-          },
-        };
-      } else {
-        next.primary.next_action = {
-          type: "explore",
-          description: "Application not approved — explore other options",
-        };
-        next.primary.reason =
-          "This card application was not approved. Consider running a new recommendation search.";
-      }
     }
+    break;
   }
 
   return next;
+}
+
+// ---- Get all card IDs to exclude from re-ranking ----
+
+export function getExcludedCardIds(userId: string): number[] {
+  const disliked = getDislikedCardIds(userId);
+  const rejected = getRejectedCardIds(userId);
+  return [...new Set([...disliked, ...rejected])];
+}
+
+// ---- Build feedback context string for LLM re-ranking ----
+
+export function buildFeedbackContext(userId: string): string {
+  const parts: string[] = [];
+
+  // Collect disliked cards
+  const dislikedFeedbacks: { card_id: number; timestamp: number }[] = [];
+  for (const fb of store.card_feedbacks) {
+    if (fb.user_id === userId && fb.action === "dislike") {
+      dislikedFeedbacks.push({ card_id: fb.card_id, timestamp: fb.timestamp });
+    }
+  }
+  if (dislikedFeedbacks.length > 0) {
+    const ids = dislikedFeedbacks.map((f) => f.card_id).join(", ");
+    parts.push(
+      `**Disliked cards** (card IDs: ${ids}): The user explicitly disliked these cards. Do NOT recommend them or cards that are very similar (same vendor, same fee structure, same limitations). Think about WHY the user might have disliked them and avoid cards with similar characteristics.`
+    );
+  }
+
+  // Collect failed openings (approval rejected)
+  const rejections: { card_id: number; card_name: string }[] = [];
+  for (const r of store.opening_results) {
+    if (r.user_id === userId && !r.approval) {
+      rejections.push({ card_id: r.card_id, card_name: r.card_name });
+    }
+  }
+  if (rejections.length > 0) {
+    const names = rejections.map((r) => `${r.card_name} (#${r.card_id})`).join(", ");
+    parts.push(
+      `**Rejected applications** (${names}): These cards rejected the user's application. Do NOT recommend them. Also avoid cards with similar issuer requirements, KYC strictness, or country restrictions — the user is likely to be rejected again.`
+    );
+  }
+
+  // Collect KYC/topup failures (informational, not exclusions)
+  const kycFailures: string[] = [];
+  const topupFailures: string[] = [];
+  for (const r of store.opening_results) {
+    if (r.user_id !== userId) continue;
+    if (!r.kyc_success) kycFailures.push(r.card_name);
+    if (r.kyc_success && !r.topup_success) topupFailures.push(r.card_name);
+  }
+  if (kycFailures.length > 0) {
+    parts.push(
+      `**KYC difficulties** with: ${kycFailures.join(", ")}. The user had trouble with KYC verification. Prefer cards with simpler KYC or no-KYC options.`
+    );
+  }
+  if (topupFailures.length > 0) {
+    parts.push(
+      `**Top-up failures** with: ${topupFailures.join(", ")}. Consider cards with more flexible funding options.`
+    );
+  }
+
+  if (parts.length === 0) {
+    return "No previous feedback.";
+  }
+
+  return parts.join("\n\n");
 }
 
 // ---- Query ----
@@ -211,4 +208,14 @@ export function getUserFeedback(userId: string) {
       (r) => r.user_id === userId
     ),
   };
+}
+
+// ---- Check if re-rank is needed ----
+
+export function needsReRank(
+  userId: string,
+  cardId: number,
+  eventType: "dislike" | "approval_rejected"
+): boolean {
+  return true; // Always re-rank on dislike or approval rejection
 }

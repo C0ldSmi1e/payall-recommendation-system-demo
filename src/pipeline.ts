@@ -11,7 +11,11 @@ import type {
   RankingResult,
   FinalRecommendation,
 } from "./types";
-import { applyFeedbackOverrides } from "./feedback";
+import {
+  applyQuickFixOverrides,
+  getExcludedCardIds,
+  buildFeedbackContext,
+} from "./feedback";
 import {
   STEP1_SYSTEM,
   buildStep1Prompt,
@@ -25,11 +29,15 @@ import {
   buildStep5Prompt,
   STEP6_SYSTEM,
   buildStep6Prompt,
+  buildStep5ReRankPrompt,
+  buildStep6ReRankPrompt,
 } from "./prompt";
 
 const client = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
+
+// ---- Pipeline step metadata ----
 
 export const PIPELINE_STEPS: StepMeta[] = [
   {
@@ -63,6 +71,32 @@ export const PIPELINE_STEPS: StepMeta[] = [
     description: "1 primary + 2 backups + next action",
   },
 ];
+
+export const RERANK_STEPS: StepMeta[] = [
+  {
+    id: "rerank_reasoning",
+    name: "Re-Ranking with Feedback",
+    description: "Re-thinking card selection based on your feedback",
+  },
+  {
+    id: "rerank_final",
+    name: "New Recommendation",
+    description: "Producing updated recommendation",
+  },
+];
+
+// ---- Pipeline cache (steps 1-4 results per user) ----
+
+interface PipelineCache {
+  userState: UserState;
+  preferenceProfile: PreferenceProfile;
+  perceptionResult: PerceptionResult;
+  cards: Card[];
+}
+
+const pipelineCache = new Map<string, PipelineCache>();
+
+// ---- Shared step runner ----
 
 function extractJson(text: string): string {
   const fenced = text.match(/```json\s*\n([\s\S]*?)\n\s*```/);
@@ -108,6 +142,37 @@ async function runStep<T>(
   send("step_done", { stepId, reasoning, result });
   return { reasoning, result };
 }
+
+// ---- Helper: build card metadata for frontend ----
+
+function buildCardMeta(cards: Card[], cardIds: Set<number>) {
+  return cards
+    .filter((c) => cardIds.has(c.id))
+    .map((c) => ({
+      id: c.id,
+      card_name: c.card_name,
+      vendor: c.vendor,
+      card_type: c.card_type,
+      is_credit: c.is_credit,
+      kyc_required: c.kyc_required,
+      has_physical_card: c.has_physical_card,
+      has_virtual_card: c.has_virtual_card,
+      based_crypto: c.based_crypto,
+      cashback_max: c.cashback_max,
+      fees: c.fees,
+      spending_limits: c.spending_limits,
+      atm_withdrawal_support: c.atm_withdrawal_support,
+      apple_wallet_support: c.apple_wallet_support,
+      google_pay_support: c.google_pay_support,
+      wechat_pay_support: c.wechat_pay_support,
+      alipay_support: c.alipay_support,
+      key_features: c.key_features,
+      card_image_thumbnail: c.card_image_thumbnail,
+      general_ratings: c.general_ratings,
+    }));
+}
+
+// ---- Full pipeline (Steps 1-6) ----
 
 export async function runPipeline(
   user: User,
@@ -159,8 +224,19 @@ export async function runPipeline(
     send
   );
 
+  // Cache steps 1-4 for re-ranking
+  pipelineCache.set(user.id, {
+    userState,
+    preferenceProfile,
+    perceptionResult,
+    cards,
+  });
+
   // Step 5: Reasoning & Ranking (top 10)
-  const top10 = perceptionResult.cards.slice(0, 10);
+  const excludedIds = new Set(getExcludedCardIds(user.id));
+  const top10 = perceptionResult.cards
+    .filter((c) => !excludedIds.has(c.card_id))
+    .slice(0, 10);
   const top10Ids = new Set(top10.map((c) => c.card_id));
   const top10CardDetails = cards.filter((c) => top10Ids.has(c.id));
 
@@ -179,38 +255,82 @@ export async function runPipeline(
     send
   );
 
-  // Attach card metadata for display
+  // Apply quick-fix overrides (KYC/topup only)
+  const finalWithFixes = applyQuickFixOverrides(user.id, finalRec);
+
+  // Build card metadata
   const recCardIds = new Set([
-    finalRec.primary.card_id,
-    ...finalRec.backups.map((b) => b.card_id),
+    finalWithFixes.primary.card_id,
+    ...finalWithFixes.backups.map((b) => b.card_id),
   ]);
-  const recCards = cards
-    .filter((c) => recCardIds.has(c.id))
-    .map((c) => ({
-      id: c.id,
-      card_name: c.card_name,
-      vendor: c.vendor,
-      card_type: c.card_type,
-      is_credit: c.is_credit,
-      kyc_required: c.kyc_required,
-      has_physical_card: c.has_physical_card,
-      has_virtual_card: c.has_virtual_card,
-      based_crypto: c.based_crypto,
-      cashback_max: c.cashback_max,
-      fees: c.fees,
-      spending_limits: c.spending_limits,
-      atm_withdrawal_support: c.atm_withdrawal_support,
-      apple_wallet_support: c.apple_wallet_support,
-      google_pay_support: c.google_pay_support,
-      wechat_pay_support: c.wechat_pay_support,
-      alipay_support: c.alipay_support,
-      key_features: c.key_features,
-      card_image_thumbnail: c.card_image_thumbnail,
-      general_ratings: c.general_ratings,
-    }));
+  const recCards = buildCardMeta(cards, recCardIds);
 
-  // Apply feedback overrides (disliked cards, failed openings)
-  const finalWithFeedback = applyFeedbackOverrides(user.id, finalRec);
+  send("pipeline_done", { recommendation: finalWithFixes, cards: recCards });
+}
 
-  send("pipeline_done", { recommendation: finalWithFeedback, cards: recCards });
+// ---- Re-rank pipeline (Steps 5+6 only, with feedback context) ----
+
+export async function reRankPipeline(
+  userId: string,
+  send: SendFn
+): Promise<void> {
+  const cache = pipelineCache.get(userId);
+  if (!cache) {
+    send("step_error", {
+      stepId: "rerank_reasoning",
+      error: "No cached pipeline results. Run the full pipeline first.",
+    });
+    return;
+  }
+
+  send("plan", { steps: RERANK_STEPS });
+
+  const { userState, preferenceProfile, perceptionResult, cards } = cache;
+  const feedbackContext = buildFeedbackContext(userId);
+  const excludedIds = new Set(getExcludedCardIds(userId));
+
+  // Filter out excluded cards from perception results
+  const remaining = perceptionResult.cards.filter(
+    (c) => !excludedIds.has(c.card_id)
+  );
+
+  if (remaining.length === 0) {
+    send("step_error", {
+      stepId: "rerank_reasoning",
+      error: "No remaining cards after filtering. All candidates have been excluded.",
+    });
+    return;
+  }
+
+  const top10 = remaining.slice(0, 10);
+  const top10Ids = new Set(top10.map((c) => c.card_id));
+  const top10CardDetails = cards.filter((c) => top10Ids.has(c.id));
+
+  // Re-run Step 5 with feedback context
+  const { result: rankingResult } = await runStep<RankingResult>(
+    "rerank_reasoning",
+    STEP5_SYSTEM,
+    buildStep5ReRankPrompt(preferenceProfile, top10, top10CardDetails, feedbackContext),
+    send
+  );
+
+  // Re-run Step 6 with feedback context
+  const { result: finalRec } = await runStep<FinalRecommendation>(
+    "rerank_final",
+    STEP6_SYSTEM,
+    buildStep6ReRankPrompt(userState, rankingResult, feedbackContext),
+    send
+  );
+
+  // Apply quick-fix overrides
+  const finalWithFixes = applyQuickFixOverrides(userId, finalRec);
+
+  // Build card metadata
+  const recCardIds = new Set([
+    finalWithFixes.primary.card_id,
+    ...finalWithFixes.backups.map((b) => b.card_id),
+  ]);
+  const recCards = buildCardMeta(cards, recCardIds);
+
+  send("pipeline_done", { recommendation: finalWithFixes, cards: recCards });
 }

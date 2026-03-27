@@ -642,27 +642,18 @@
     // ---- Feedback functions ----
 
     async function feedbackCard(cardId, action, btn) {
-      try {
-        const res = await fetch('/api/feedback/card', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            user_id: currentUserId,
-            card_id: cardId,
-            action,
-            base_recommendation: currentBaseRec,
-          }),
-        });
-        const data = await res.json();
+      // Record feedback
+      await fetch('/api/feedback/card', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: currentUserId, card_id: cardId, action }),
+      });
 
-        if (action === 'like') {
-          btn.classList.add('liked');
-        } else if (action === 'dislike' && data.recommendation) {
-          // Re-render with updated recommendation
-          renderFinalRecommendation(data.recommendation, lastCardsMeta);
-        }
-      } catch (err) {
-        console.error('Feedback error:', err);
+      if (action === 'like') {
+        btn.classList.add('liked');
+      } else {
+        // Dislike → trigger re-rank via SSE
+        startReRank();
       }
     }
 
@@ -670,7 +661,6 @@
       openCardTargetId = cardId;
       openCardTargetName = cardName;
       document.getElementById('modalCardName').textContent = `Open Card: ${cardName}`;
-      // Reset toggles to "on" (pass)
       ['toggleKyc', 'toggleTopup', 'toggleApproval'].forEach(id => {
         document.getElementById(id).classList.add('on');
         document.getElementById(id + 'Label').textContent = 'Pass';
@@ -696,51 +686,97 @@
       const kyc = document.getElementById('toggleKyc').classList.contains('on');
       const topup = document.getElementById('toggleTopup').classList.contains('on');
       const approval = document.getElementById('toggleApproval').classList.contains('on');
-
       closeModal();
 
-      try {
-        const res = await fetch('/api/feedback/open-card', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            user_id: currentUserId,
-            card_id: openCardTargetId,
-            card_name: openCardTargetName,
-            kyc_success: kyc,
-            topup_success: topup,
-            approval: approval,
-            base_recommendation: currentBaseRec,
-          }),
-        });
-        const data = await res.json();
-        const allPass = kyc && topup && approval;
+      const res = await fetch('/api/feedback/open-card', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: currentUserId,
+          card_id: openCardTargetId,
+          card_name: openCardTargetName,
+          kyc_success: kyc,
+          topup_success: topup,
+          approval: approval,
+        }),
+      });
+      const data = await res.json();
+      const allPass = kyc && topup && approval;
 
-        // Show result in the opening result area
-        const resultEl = document.getElementById(`openingResult-${openCardTargetId}`);
-        if (resultEl) {
-          resultEl.innerHTML = `
-            <div class="opening-result ${allPass ? 'success' : 'failure'}">
-              <h4>${allPass ? 'Card Opened Successfully!' : 'Card Opening Failed'}</h4>
-              <div class="opening-steps">
-                <span class="opening-step ${kyc ? 'pass' : 'fail'}">${kyc ? '✓' : '✗'} KYC</span>
-                <span class="opening-step ${topup ? 'pass' : 'fail'}">${topup ? '✓' : '✗'} Top-up</span>
-                <span class="opening-step ${approval ? 'pass' : 'fail'}">${approval ? '✓' : '✗'} Approval</span>
-              </div>
-              ${!allPass && data.recommendation ? '<p style="color:#aaa;font-size:0.82rem;">Recommendation adjusted — see updated results above.</p>' : ''}
+      // Show opening result
+      const resultEl = document.getElementById(`openingResult-${openCardTargetId}`);
+      if (resultEl) {
+        resultEl.innerHTML = `
+          <div class="opening-result ${allPass ? 'success' : 'failure'}">
+            <h4>${allPass ? 'Card Opened Successfully!' : 'Card Opening Failed'}</h4>
+            <div class="opening-steps">
+              <span class="opening-step ${kyc ? 'pass' : 'fail'}">${kyc ? '✓' : '✗'} KYC</span>
+              <span class="opening-step ${topup ? 'pass' : 'fail'}">${topup ? '✓' : '✗'} Top-up</span>
+              <span class="opening-step ${approval ? 'pass' : 'fail'}">${approval ? '✓' : '✗'} Approval</span>
             </div>
-          `;
-        }
-
-        // If there's a failure and we got an updated recommendation, re-render
-        if (!allPass && data.recommendation) {
-          setTimeout(() => {
-            renderFinalRecommendation(data.recommendation, lastCardsMeta);
-          }, 1500);
-        }
-      } catch (err) {
-        console.error('Open card error:', err);
+            ${data.needs_rerank ? '<p style="color:#fcd34d;font-size:0.82rem;margin-top:0.5rem;">Re-thinking recommendations...</p>' : ''}
+            ${!allPass && !data.needs_rerank ? '<p style="color:#aaa;font-size:0.82rem;margin-top:0.5rem;">Try again or check the suggested next step above.</p>' : ''}
+          </div>
+        `;
       }
+
+      if (data.needs_rerank) {
+        // Approval failed → re-rank with LLM thinking
+        setTimeout(() => startReRank(), 1500);
+      }
+    }
+
+    // ---- Re-rank via SSE (re-runs Steps 5+6 with feedback context) ----
+
+    function startReRank() {
+      // Show mini pipeline in results area
+      const pipeline = document.getElementById('pipeline');
+      pipeline.classList.add('visible');
+      document.getElementById('pipelineSteps').innerHTML = '';
+
+      const es = new EventSource(`/api/recommend/rerank?userId=${currentUserId}`);
+
+      es.addEventListener('plan', (e) => {
+        const { steps } = JSON.parse(e.data);
+        renderPlan(steps);
+      });
+
+      es.addEventListener('step_start', (e) => {
+        const { stepId } = JSON.parse(e.data);
+        setStepStatus(stepId, 'running');
+        expandStep(stepId);
+        stepTimers[stepId] = Date.now();
+      });
+
+      es.addEventListener('step_stream', (e) => {
+        const { stepId, chunk } = JSON.parse(e.data);
+        appendReasoning(stepId, chunk);
+      });
+
+      es.addEventListener('step_done', (e) => {
+        const { stepId, reasoning, result } = JSON.parse(e.data);
+        setStepStatus(stepId, 'done');
+        setStepTime(stepId);
+        setStepSummary(stepId, result);
+        collapseStep(stepId);
+      });
+
+      es.addEventListener('step_error', (e) => {
+        const { error: errMsg } = JSON.parse(e.data);
+        document.getElementById('error').textContent = `Re-rank error: ${errMsg}`;
+        document.getElementById('error').classList.add('visible');
+        es.close();
+      });
+
+      es.addEventListener('pipeline_done', (e) => {
+        const { recommendation, cards } = JSON.parse(e.data);
+        currentBaseRec = recommendation;
+        lastCardsMeta = cards;
+        renderFinalRecommendation(recommendation, cards);
+        es.close();
+      });
+
+      es.onerror = () => es.close();
     }
 
     init();

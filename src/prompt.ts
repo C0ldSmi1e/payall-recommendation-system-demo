@@ -500,3 +500,75 @@ ${JSON.stringify(rankingResult, null, 2)}
 
 Produce the final recommendation with primary + 2 backups + next action + why-not-others.`;
 }
+
+// ============================================================
+// RE-RANK PROMPTS (Steps 5+6 with feedback context)
+// ============================================================
+
+export function buildStep5ReRankPrompt(
+  preferenceProfile: PreferenceProfile,
+  top10Cards: MultiOutcomeCard[],
+  cardDetails: Card[],
+  feedbackContext: string
+): string {
+  const details = cardDetails.map((c) => ({
+    id: c.id,
+    card_name: c.card_name,
+    vendor: c.vendor,
+    card_type: c.card_type,
+    kyc_required: c.kyc_required,
+    has_physical_card: c.has_physical_card,
+    has_virtual_card: c.has_virtual_card,
+    fees: c.fees,
+    cashback: c.cashback,
+    key_features: c.key_features,
+    summary: c.summary,
+    general_ratings: c.general_ratings,
+  }));
+
+  return `## IMPORTANT: Feedback Context (re-ranking)
+
+${feedbackContext}
+
+You are RE-RANKING because the user gave feedback. Think carefully about WHY the user disliked or was rejected by certain cards, and avoid recommending cards with similar characteristics.
+
+## User Preference Profile (from Step 3)
+
+${JSON.stringify(preferenceProfile, null, 2)}
+
+## Remaining Candidate Cards with Multi-Outcome Scores
+
+${JSON.stringify(top10Cards, null, 2)}
+
+## Card Details
+
+${JSON.stringify(details, null, 2)}
+
+Re-select 1 primary + 2 backups. Consider the feedback context carefully. Ensure the new picks are DIFFERENT from what was rejected/disliked — not just the next card in the list, but genuinely better alternatives given what we now know about the user's preferences.`;
+}
+
+export function buildStep6ReRankPrompt(
+  userState: UserState,
+  rankingResult: RankingResult,
+  feedbackContext: string
+): string {
+  return `## IMPORTANT: Feedback Context (re-ranking)
+
+${feedbackContext}
+
+The user already saw and rejected previous recommendations. Your new recommendation must acknowledge this and feel fresh — not like the same list with one card swapped out.
+
+## User State Summary
+
+${userState.summary}
+Journey: ${userState.journey_position} | Mode: ${userState.current_mode}
+Intent: ${userState.detected_intent}
+KYC tolerance: ${userState.derived_scores.kyc_friction_tolerance}
+Fee sensitivity: ${userState.derived_scores.fee_sensitivity_score}
+
+## New Ranking & Analysis (from re-ranking step)
+
+${JSON.stringify(rankingResult, null, 2)}
+
+Produce the final recommendation with primary + 2 backups + next action + why-not-others. In the "why_not_others", include the previously rejected/disliked cards with a note about why they were removed.`;
+}
