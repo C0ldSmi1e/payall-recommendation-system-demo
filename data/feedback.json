@@ -17,6 +17,18 @@
       "card_id": 23,
       "action": "dislike",
       "timestamp": 1774639015969
+    },
+    {
+      "user_id": "7",
+      "card_id": 23,
+      "action": "dislike",
+      "timestamp": 1774639672111
+    },
+    {
+      "user_id": "7",
+      "card_id": 3,
+      "action": "dislike",
+      "timestamp": 1774640314503
     }
   ],
   "opening_results": [

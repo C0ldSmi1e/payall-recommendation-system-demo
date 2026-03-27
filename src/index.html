@@ -466,9 +466,9 @@
             <div class="step-time" id="step-time-${s.id}"></div>
             <div class="step-toggle">▼</div>
           </div>
+          <div class="step-summary" id="step-summary-${s.id}" style="display:none;padding:0.5rem 1rem;"></div>
           <div class="step-body">
             <div class="step-reasoning" id="step-reasoning-${s.id}"></div>
-            <div class="step-summary" id="step-summary-${s.id}" style="display:none;"></div>
           </div>
         </div>
       `).join('');
@@ -536,9 +536,9 @@
       } else if (stepId === 'card_perception') {
         const top3 = result.cards.slice(0, 3).map(c => `${c.card_name} (${c.composite_score})`).join(', ');
         text = `Top 3: ${top3}`;
-      } else if (stepId === 'reasoning_ranking') {
+      } else if (stepId === 'reasoning_ranking' || stepId === 'rerank_reasoning') {
         text = result.head_to_head_summary;
-      } else if (stepId === 'final_action') {
+      } else if (stepId === 'final_action' || stepId === 'rerank_final') {
         text = `Primary: ${result.primary?.card_name || 'N/A'} — see results below`;
       }
       if (text) { el.textContent = text; el.style.display = 'block'; }
