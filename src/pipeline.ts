@@ -116,7 +116,7 @@ async function runStep<T>(
 
   let text = "";
   const stream = client.messages.stream({
-    model: "claude-sonnet-4-20250514",
+    model: "claude-opus-4-6",
     max_tokens: 16000,
     system: systemPrompt,
     messages: [{ role: "user", content: userPrompt }],

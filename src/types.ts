@@ -27,6 +27,12 @@ export interface User {
   priorities: string[];
   owned_card_ids: number[];
   transaction_history: Transaction[];
+  self_reported?: {
+    needs_description?: string;
+    country?: string;
+    device_type?: "iphone" | "android" | "both";
+    preferred_assets?: string[];
+  };
 }
 
 export interface Card {

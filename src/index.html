@@ -330,7 +330,21 @@
       if (user.needs_alipay) needs.push('Alipay');
       const cardPref = [user.wants_physical_card && 'physical', user.wants_virtual_card && 'virtual'].filter(Boolean).join(' + ');
 
+      const sr = user.self_reported;
+      const selfReportedHtml = sr ? `
+        <div class="persona-box" style="border-color:#3a2a5a;background:#1a1028;">
+          <span class="persona-label" style="background:#7c3aed;">User Input</span>
+          ${sr.needs_description ? `<p style="color:#c4b5fd;font-weight:500;margin-bottom:0.4rem;">"${sr.needs_description}"</p>` : ''}
+          <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.3rem;">
+            ${sr.country ? `<span class="tag priority">Country: ${sr.country}</span>` : ''}
+            ${sr.device_type ? `<span class="tag priority">Device: ${sr.device_type}</span>` : ''}
+            ${sr.preferred_assets ? sr.preferred_assets.map(a => `<span class="tag crypto">${a}</span>`).join('') : ''}
+          </div>
+        </div>
+      ` : '';
+
       document.getElementById('userPersona').innerHTML = `
+        ${selfReportedHtml}
         <div class="persona-box">
           <span class="persona-label">Persona</span>
           <p>

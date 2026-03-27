@@ -29,13 +29,24 @@ export const STEP1_SYSTEM = `You are a user state analysis expert for a crypto c
 
 Your job: go beyond surface-level profiling. Analyze the user's current STATE — not just preferences, but where they are in their journey, what mode they're in, and what they need RIGHT NOW.
 
+## Self-reported user input (HIGHEST PRIORITY)
+
+If the user provided a \`self_reported\` object, treat it as the **strongest signal** — it overrides inferred data:
+- \`self_reported.needs_description\`: The user's own words about what they want. This is the #1 signal. Weight it ABOVE transaction patterns and profile metadata.
+- \`self_reported.country\`: If present, overrides the profile \`country\` and \`current_location\` fields.
+- \`self_reported.device_type\`: If present, overrides payment method needs ("iphone" → needs Apple Pay, "android" → needs Google Pay, "both" → needs both).
+- \`self_reported.preferred_assets\`: If present, overrides \`held_cryptos\` and \`preferred_topup_crypto\`.
+
+If \`self_reported\` is absent or empty, fall back to inferring from profile + transaction data as usual.
+
 ## What to analyze
 
-1. **Static attributes**: country, device/payment needs, crypto holdings, card type preference
-2. **Dynamic state**: Are they traveling or in routine mode? Are they actively looking for a new card or exploring? Do they seem urgent?
-3. **Historical patterns**: Transaction history reveals spending categories, frequency, amount distribution, merchant types, cross-border usage
-4. **Journey position**: new_user (no cards), active_single_card, multi_card_user, or heavy_spender
-5. **Intent detection**: Why might they be looking at recommendations right now?
+1. **Self-reported needs** (if provided): The user's explicit description of what they want — this is the primary signal
+2. **Static attributes**: country, device/payment needs, crypto holdings, card type preference
+3. **Dynamic state**: Are they traveling or in routine mode? Are they actively looking for a new card or exploring? Do they seem urgent?
+4. **Historical patterns**: Transaction history reveals spending categories, frequency, amount distribution, merchant types, cross-border usage
+5. **Journey position**: new_user (no cards), active_single_card, multi_card_user, or heavy_spender
+6. **Intent detection**: Why might they be looking at recommendations right now?
 
 ## Derived feature scores (0.0 to 1.0)
 
@@ -103,7 +114,18 @@ export function buildStep1Prompt(user: User, cards: Card[]): string {
     .filter(Boolean)
     .map((c) => ({ id: c!.id, name: c!.card_name, kyc_required: c!.kyc_required }));
 
-  return `## User Data
+  let selfReportedSection = "";
+  if (user.self_reported) {
+    const sr = user.self_reported;
+    const parts: string[] = [];
+    if (sr.needs_description) parts.push(`**User's own words**: "${sr.needs_description}"`);
+    if (sr.country) parts.push(`**Self-reported country**: ${sr.country} (overrides profile country)`);
+    if (sr.device_type) parts.push(`**Device**: ${sr.device_type}`);
+    if (sr.preferred_assets) parts.push(`**Preferred assets**: ${sr.preferred_assets.join(", ")}`);
+    selfReportedSection = `## USER SELF-REPORTED INPUT (HIGHEST PRIORITY — overrides inferred data)\n\n${parts.join("\n")}\n\n`;
+  }
+
+  return `${selfReportedSection}## User Data
 
 ${JSON.stringify(
   {
@@ -115,7 +137,7 @@ ${JSON.stringify(
   2
 )}
 
-Analyze this user's state comprehensively. Compute all derived scores with evidence.`;
+Analyze this user's state comprehensively. Compute all derived scores with evidence.${user.self_reported ? " Pay special attention to the self-reported input above — it should be the strongest signal." : ""}`;
 }
 
 // ============================================================
@@ -195,11 +217,15 @@ Apply hard constraints. Determine the feasible action set.`;
 
 export const STEP3_SYSTEM = `You are a behavioral analyst specializing in crypto card users. This is CoT-Rec Step A: User Preference Analysis.
 
-Your job: deep dive into what this user cares about RIGHT NOW, based on their state and transaction history. Not what they say they want — what their behavior reveals.
+Your job: deep dive into what this user cares about RIGHT NOW.
+
+## Self-reported needs (HIGHEST PRIORITY)
+
+If the UserState includes information derived from the user's self_reported.needs_description, treat it as the **PRIMARY driver** of priority weights. The user's own words override behavioral patterns when they conflict. For example, if transaction history suggests dining is important but the user explicitly says "I need online payment support", weight online_payments higher.
 
 ## What to determine
 
-1. **Right-now priorities with weights**: What matters most TODAY? Assign numerical weights (must sum to 1.0). Examples: low_fees (0.3), wide_acceptance (0.25), high_limits (0.2), cashback (0.15), privacy (0.1)
+1. **Right-now priorities with weights**: What matters most TODAY? Assign numerical weights (must sum to 1.0). If the user provided a self_reported needs description, let it drive these weights. Examples: low_fees (0.3), wide_acceptance (0.25), high_limits (0.2), cashback (0.15), privacy (0.1)
 
 2. **Short-term vs long-term intent**: Are they solving an immediate problem (upcoming trip, card expired, got declined) or planning ahead?
 

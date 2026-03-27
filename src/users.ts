@@ -50,6 +50,10 @@ export const users: User[] = [
     needs_alipay: false,
     priorities: ["privacy", "low_fees", "no_kyc"],
     owned_card_ids: [],
+    self_reported: {
+      needs_description: "I want maximum privacy. No KYC if possible. I'm a digital nomad currently in Portugal and I want to keep my spending anonymous.",
+      preferred_assets: ["USDT", "USDC"],
+    },
     transaction_history: [],
   },
   {
@@ -125,6 +129,12 @@ export const users: User[] = [
     needs_alipay: true,
     priorities: ["travel_perks", "cashback", "wechat_alipay", "high_spending_limit"],
     owned_card_ids: [40],
+    self_reported: {
+      needs_description: "Living in Asia, I need WeChat Pay and Alipay support for daily life. Travel frequently between Singapore and Hong Kong.",
+      country: "SGP",
+      device_type: "iphone",
+      preferred_assets: ["USDC"],
+    },
     transaction_history: [
       { card_id: 40, amount_usd: 800, category: "travel", date: "2026-02-15" },
       { card_id: 40, amount_usd: 250, category: "dining", date: "2026-03-01" },
@@ -330,6 +340,11 @@ export const users: User[] = [
     needs_alipay: false,
     priorities: ["low_fees", "wide_acceptance", "online_payments", "multi_currency"],
     owned_card_ids: [23],
+    self_reported: {
+      needs_description: "I subscribe to many AI tools and need a card that works well for online payments. Also drive a Tesla and need reliable recurring billing support.",
+      device_type: "iphone",
+      preferred_assets: ["USDT"],
+    },
     transaction_history: [
   { card_id: 23, amount_usd: 39.40, category: "dining", date: "2026-01-21" },
   { card_id: 23, amount_usd: 7.00, category: "dining", date: "2026-01-22" },

@@ -11,6 +11,12 @@
       "card_id": 34,
       "action": "dislike",
       "timestamp": 1774568816476
+    },
+    {
+      "user_id": "5",
+      "card_id": 23,
+      "action": "dislike",
+      "timestamp": 1774639015969
     }
   ],
   "opening_results": [
