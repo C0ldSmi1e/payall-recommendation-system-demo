@@ -1,0 +1,28 @@
+{
+  "id": "yuki-tanaka-v1",
+  "name": "yuki-tanaka-high-spender-traveler",
+  "description": "Japanese high-spender ($8k/mo), KYC-verified, frequent traveler, needs ATM + physical card + Apple/Google Pay. Owns Redotpay(#40) + Bit2Go(#23).",
+  "user_id": "3",
+  "expectations": {
+    "constraint": {
+      "must_eliminate": [40, 23],
+      "must_keep": [35, 9, 16, 41, 3]
+    },
+    "scoring": {
+      "top_5_must_include": [],
+      "top_10_must_include": [],
+      "must_not_rank_high": [],
+      "score_ordering": []
+    },
+    "recommendation": {
+      "primary_candidates": [9, 35, 16, 41, 3, 8, 4, 5, 15, 18, 13, 11],
+      "must_not_recommend": [40, 23]
+    },
+    "qualitative": {
+      "primary_must_have_feature": ["atm_withdrawal_support"],
+      "reason_must_mention": ["travel"]
+    }
+  },
+  "confidence": "medium",
+  "notes": "No country blocks for JPN. Owns both popular cards (40+23). Primary needs ATM + high limits. Cashback is secondary priority."
+}

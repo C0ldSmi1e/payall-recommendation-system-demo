@@ -1,0 +1,27 @@
+{
+  "id": "alan-walker-v1",
+  "name": "alan-walker-luxury-privacy",
+  "description": "HK resident in USA, unverified KYC, $8k/mo heavy dining/luxury, needs Apple Pay, wants no-KYC + high limits + privacy. Owns Bit2Go(#23).",
+  "user_id": "6",
+  "expectations": {
+    "constraint": {
+      "must_eliminate": [23],
+      "must_keep": [26, 34, 29, 43, 42, 33, 27, 30]
+    },
+    "scoring": {
+      "top_5_must_include": [],
+      "top_10_must_include": [],
+      "must_not_rank_high": [],
+      "score_ordering": []
+    },
+    "recommendation": {
+      "primary_candidates": [26, 34, 29, 43, 42, 33, 62, 27, 30, 28, 64, 46, 31],
+      "must_not_recommend": [23]
+    },
+    "qualitative": {
+      "reason_must_mention": ["privacy"]
+    }
+  },
+  "confidence": "medium",
+  "notes": "HKG has no country blocks but USA blocks 35 cards (current_location). High spender wanting no-KYC is challenging — limits will be tight."
+}

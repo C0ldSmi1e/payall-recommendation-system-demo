@@ -70,6 +70,56 @@
     .results.visible { display: block; }
     .results-title { font-size: 1.1rem; font-weight: 600; color: #fff; margin-bottom: 1rem; }
 
+    /* Personalization Insights */
+    .insights-panel { background: linear-gradient(135deg, #1a1028 0%, #0f1a2e 100%); border: 1px solid #2a2a5a; border-radius: 12px; padding: 1.25rem; margin-bottom: 1.5rem; }
+    .insights-title { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; color: #7c3aed; font-weight: 700; margin-bottom: 0.75rem; }
+    .insight-item { display: flex; gap: 0.75rem; padding: 0.6rem 0; border-bottom: 1px solid rgba(124,58,237,0.15); }
+    .insight-item:last-child { border-bottom: none; }
+    .insight-icon { font-size: 1.2rem; flex-shrink: 0; width: 28px; text-align: center; }
+    .insight-content { flex: 1; }
+    .insight-title { font-size: 0.9rem; font-weight: 600; color: #e0e0e0; margin-bottom: 0.15rem; }
+    .insight-desc { font-size: 0.82rem; color: #aaa; line-height: 1.4; }
+    .insight-evidence { font-size: 0.78rem; color: #7c3aed; margin-top: 0.25rem; font-style: italic; }
+
+    /* Score Breakdown */
+    .score-breakdown { background: #111118; border: 1px solid #222230; border-radius: 8px; padding: 1rem; margin-bottom: 0.75rem; }
+    .score-breakdown-title { font-size: 0.75rem; color: #666; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.75rem; }
+    .score-bar-row { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.6rem; }
+    .score-bar-label { font-size: 0.8rem; color: #ccc; min-width: 130px; }
+    .score-bar-track { flex: 1; height: 8px; background: #1a1a2a; border-radius: 4px; overflow: hidden; }
+    .score-bar-fill { height: 100%; border-radius: 4px; transition: width 0.8s ease; }
+    .score-bar-fill.high { background: linear-gradient(90deg, #6ee7b7, #34d399); }
+    .score-bar-fill.medium { background: linear-gradient(90deg, #fcd34d, #f59e0b); }
+    .score-bar-fill.low { background: linear-gradient(90deg, #f87171, #ef4444); }
+    .score-bar-value { font-size: 0.78rem; color: #888; min-width: 32px; text-align: right; }
+    .score-bar-explain { font-size: 0.75rem; color: #666; margin-top: -0.25rem; margin-bottom: 0.5rem; padding-left: calc(130px + 0.75rem); }
+
+    /* Savings Callout */
+    .savings-callout { background: linear-gradient(135deg, #0a2e1a 0%, #0f1a0f 100%); border: 2px solid #1a4a2a; border-radius: 10px; padding: 1rem 1.25rem; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 1rem; }
+    .savings-amount { font-size: 1.8rem; font-weight: 800; color: #6ee7b7; white-space: nowrap; }
+    .savings-period { font-size: 0.75rem; color: #6ee7b7; opacity: 0.7; }
+    .savings-detail { flex: 1; }
+    .savings-breakdown { font-size: 0.82rem; color: #6ee7b7; opacity: 0.8; line-height: 1.4; }
+    .savings-annual { font-size: 0.78rem; color: #34d399; margin-top: 0.25rem; }
+
+    /* Conversion Hook */
+    .conversion-hook { background: linear-gradient(135deg, #2a1a0a 0%, #1a1028 100%); border: 1px solid #5a3a1a; border-radius: 8px; padding: 0.75rem 1rem; margin-bottom: 0.75rem; font-size: 0.9rem; color: #fcd34d; font-weight: 600; line-height: 1.4; }
+
+    /* Location badge */
+    .location-badge { display: inline-flex; align-items: center; gap: 0.4rem; background: #1a1028; border: 1px solid #3a2a5a; border-radius: 20px; padding: 0.3rem 0.8rem; font-size: 0.82rem; color: #c4b5fd; margin-bottom: 0.75rem; }
+    .location-badge.mismatch { border-color: #fcd34d; background: #2a2a0a; color: #fcd34d; }
+
+    /* Bit2Go Revenue Action */
+    .bit2go-action { background: linear-gradient(135deg, #0f2a1a 0%, #0a1a2a 100%); border: 2px solid #2aaa6a; border-radius: 12px; padding: 1.25rem; margin-bottom: 1.5rem; position: relative; overflow: hidden; }
+    .bit2go-action::before { content: ''; position: absolute; top: 0; right: 0; width: 120px; height: 120px; background: radial-gradient(circle at top right, rgba(42,170,106,0.15), transparent); }
+    .bit2go-badge { display: inline-block; background: #2aaa6a; color: #fff; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; padding: 0.2rem 0.6rem; border-radius: 4px; margin-bottom: 0.75rem; }
+    .bit2go-headline { font-size: 1.15rem; font-weight: 700; color: #6ee7b7; margin-bottom: 0.35rem; }
+    .bit2go-desc { font-size: 0.88rem; color: #aaa; line-height: 1.5; margin-bottom: 0.5rem; }
+    .bit2go-value { font-size: 0.9rem; color: #6ee7b7; font-weight: 600; margin-bottom: 0.35rem; }
+    .bit2go-urgency { font-size: 0.82rem; color: #fcd34d; margin-bottom: 0.75rem; }
+    .bit2go-cta { display: inline-block; background: #2aaa6a; color: #fff; border: none; padding: 0.6rem 1.5rem; border-radius: 8px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+    .bit2go-cta:hover { background: #25995e; }
+
     /* Primary card - prominent */
     .primary-card { background: #1a1a1a; border: 2px solid #7c3aed; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; position: relative; }
     .primary-badge { position: absolute; top: -10px; left: 1rem; background: #7c3aed; color: #fff; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; padding: 0.2rem 0.75rem; border-radius: 10px; }
@@ -205,6 +255,15 @@
       .next-action { padding: 0.6rem 0.75rem; gap: 0.5rem; }
       .next-action-text { font-size: 0.82rem; }
       .next-action-desc { font-size: 0.75rem; }
+
+      /* Insights */
+      .insights-panel { padding: 1rem; }
+      .insight-item { gap: 0.5rem; }
+      .savings-callout { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+      .savings-amount { font-size: 1.5rem; }
+      .score-bar-row { flex-wrap: wrap; }
+      .score-bar-label { min-width: 100px; font-size: 0.75rem; }
+      .score-bar-explain { padding-left: 0; }
 
       /* Backup cards: stack vertically */
       .backup-cards { grid-template-columns: 1fr; gap: 0.75rem; }
@@ -348,12 +407,12 @@
         <div class="persona-box">
           <span class="persona-label">Persona</span>
           <p>
-            <strong>${user.name}</strong> is based in <strong>${user.country}</strong>${user.current_location !== user.country ? `, currently in <strong>${user.current_location}</strong>` : ''}.
+            <strong>${user.name}</strong> — registered in <strong>${user.country}</strong>${user.current_location !== user.country ? `, actual location: <strong>${user.current_location}</strong>` : ''}.
             Spends ~<strong>$${user.monthly_spend_usd.toLocaleString()}/mo</strong> in <strong>${user.preferred_currency}</strong>, primarily on ${user.primary_use.join(', ')}.
             Fee sensitivity: <strong>${user.fee_sensitivity}</strong>. Prefers ${cardPref} cards.
             ${needs.length ? `Needs ${needs.join(', ')}.` : ''}
             Top priorities: ${user.priorities.map(p => `<strong>${p.replace(/_/g, ' ')}</strong>`).join(', ')}.
-            ${user.owned_card_ids.length ? `Already owns ${user.owned_card_ids.length} card(s).` : 'No cards yet.'}
+            ${user.owned_card_ids.length ? `Already owns ${user.owned_card_ids.length} card(s)${user.owned_card_ids.includes(23) ? ' (incl. Bit2Go)' : ''}.` : 'No cards yet.'}
             <strong>${user.transaction_history.length}</strong> transactions on record.
           </p>
         </div>
@@ -376,8 +435,8 @@
         <div class="user-section">
           <h4>Profile</h4>
           <div class="user-detail">
-            <div><span>Country:</span> <strong>${user.country}</strong></div>
-            <div><span>Location:</span> <strong>${user.current_location}</strong></div>
+            <div><span>Registered:</span> <strong>${user.country}</strong></div>
+            <div><span>Actual location:</span> <strong>${user.current_location}</strong>${user.country !== user.current_location ? ' <span style="color:#fcd34d;font-size:0.75rem;">(differs from registration)</span>' : ''}</div>
             <div><span>Monthly spend:</span> <strong>$${user.monthly_spend_usd.toLocaleString()}</strong></div>
             <div><span>Currency:</span> <strong>${user.preferred_currency}</strong></div>
             <div><span>Fee sensitivity:</span> <strong>${user.fee_sensitivity}</strong></div>
@@ -444,10 +503,10 @@
       });
 
       currentEventSource.addEventListener('pipeline_done', (e) => {
-        const { recommendation, cards } = JSON.parse(e.data);
+        const { recommendation, cards, location } = JSON.parse(e.data);
         currentBaseRec = recommendation;
         lastCardsMeta = cards;
-        renderFinalRecommendation(recommendation, cards);
+        renderFinalRecommendation(recommendation, cards, location);
         currentEventSource.close();
       });
 
@@ -575,7 +634,28 @@
 
     function scoreClass(score) { return score >= 80 ? 'high' : score >= 60 ? 'medium' : 'low'; }
 
-    function renderFinalRecommendation(rec, cardsMeta) {
+    const INSIGHT_ICONS = {
+      location_inference: '📍',
+      spending_pattern: '📊',
+      gap_analysis: '🔍',
+      savings_opportunity: '💰',
+      pain_point: '⚠️',
+    };
+
+    function renderScoreBar(item) {
+      const pct = Math.round(item.score);
+      const cls = pct >= 70 ? 'high' : pct >= 40 ? 'medium' : 'low';
+      return `
+        <div class="score-bar-row">
+          <div class="score-bar-label">${item.label}</div>
+          <div class="score-bar-track"><div class="score-bar-fill ${cls}" style="width:${pct}%"></div></div>
+          <div class="score-bar-value">${pct}</div>
+        </div>
+        <div class="score-bar-explain">${item.explanation}</div>
+      `;
+    }
+
+    function renderFinalRecommendation(rec, cardsMeta, locationData) {
       const cardsMap = {};
       (cardsMeta || []).forEach(c => cardsMap[c.id] = c);
       const p = rec.primary;
@@ -583,8 +663,81 @@
 
       const actionIcons = { apply: '→', kyc: '🔐', topup: '💰', explore: '🔍' };
 
+      // Insights panel
+      const insights = rec.insights || [];
+      const insightsHtml = insights.length ? `
+        <div class="insights-panel">
+          <div class="insights-title">We analyzed your spending — here's what we found</div>
+          ${insights.map(ins => `
+            <div class="insight-item">
+              <div class="insight-icon">${INSIGHT_ICONS[ins.type] || '💡'}</div>
+              <div class="insight-content">
+                <div class="insight-title">${ins.title}</div>
+                <div class="insight-desc">${ins.description}</div>
+                <div class="insight-evidence">${ins.evidence}</div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      ` : '';
+
+      // Score breakdown
+      const breakdown = p.score_breakdown || [];
+      const breakdownHtml = breakdown.length ? `
+        <div class="score-breakdown">
+          <div class="score-breakdown-title">Why this score — transparent breakdown</div>
+          ${breakdown.map(renderScoreBar).join('')}
+        </div>
+      ` : '';
+
+      // Savings callout
+      const savings = p.savings_vs_current;
+      const savingsHtml = savings && savings.monthly_usd > 0 ? `
+        <div class="savings-callout">
+          <div>
+            <div class="savings-amount">+$${savings.monthly_usd.toLocaleString()}</div>
+            <div class="savings-period">/month</div>
+          </div>
+          <div class="savings-detail">
+            <div class="savings-breakdown">${savings.breakdown}</div>
+            <div class="savings-annual">That's $${savings.annual_usd.toLocaleString()}/year back in your pocket</div>
+          </div>
+        </div>
+      ` : '';
+
+      // Conversion hook
+      const hookHtml = p.conversion_hook ? `
+        <div class="conversion-hook">${p.conversion_hook}</div>
+      ` : '';
+
+      // Inferred location badge
+      const loc = rec.inferred_location;
+      const locationHtml = loc ? `
+        <div class="location-badge ${loc.mismatch ? 'mismatch' : ''}">
+          📍 ${loc.mismatch ? `Registered: ${loc.registered_country} → Actual: <strong>${loc.city_or_region}</strong>` : `Based in <strong>${loc.city_or_region}</strong>`}
+        </div>
+        ${loc.mismatch ? `<div style="font-size:0.82rem;color:#aaa;margin-bottom:1rem;line-height:1.4;">${loc.explanation}</div>` : ''}
+      ` : '';
+
+      // Bit2Go revenue action
+      const b2g = rec.bit2go_action;
+      const bit2goHtml = b2g ? `
+        <div class="bit2go-action">
+          <div class="bit2go-badge">PayAll × Bit2Go</div>
+          <div class="bit2go-headline">${b2g.headline}</div>
+          <div class="bit2go-desc">${b2g.description}</div>
+          <div class="bit2go-value">${b2g.value_proposition}</div>
+          <div class="bit2go-urgency">${b2g.urgency}</div>
+          <button class="bit2go-cta">${b2g.cta_text}</button>
+        </div>
+      ` : '';
+
       let html = `
-        <div class="results-title">Recommendation</div>
+        <div class="results-title">Your Personalized Recommendation</div>
+
+        ${locationHtml}
+        ${insightsHtml}
+        ${bit2goHtml}
 
         <div class="primary-card">
           <div class="primary-badge">Best Match</div>
@@ -594,7 +747,14 @@
           </div>
           <div class="card-tagline">${p.tagline}</div>
           <div class="card-meta">${renderCardMeta(pCard)}</div>
+
+          ${hookHtml}
+          ${savingsHtml}
+
           <div class="card-reason">${p.reason}</div>
+
+          ${breakdownHtml}
+
           ${renderCardFeatures(pCard)}
           <div class="card-details">
             <div class="pros"><h4>Pros</h4><ul>${(p.pros||[]).map(x => `<li>${x}</li>`).join('')}</ul></div>
@@ -628,6 +788,7 @@
                 <div class="card-tagline">${b.tagline}</div>
                 <div class="card-meta">${renderCardMeta(bCard)}</div>
                 <div class="card-reason">${b.reason}</div>
+                ${b.key_advantage ? `<div style="background:#0a2e1a;border:1px solid #1a4a2a;border-radius:6px;padding:0.4rem 0.6rem;font-size:0.8rem;color:#6ee7b7;margin-bottom:0.5rem;">💡 ${b.key_advantage}</div>` : ''}
                 <div class="pick-this-if"><strong>Pick this if:</strong> ${b.pick_this_if}</div>
                 <div class="card-actions">
                   <button class="fb-btn" onclick="feedbackCard(${b.card_id}, 'like', this)">👍</button>
@@ -783,10 +944,10 @@
       });
 
       es.addEventListener('pipeline_done', (e) => {
-        const { recommendation, cards } = JSON.parse(e.data);
+        const { recommendation, cards, location } = JSON.parse(e.data);
         currentBaseRec = recommendation;
         lastCardsMeta = cards;
-        renderFinalRecommendation(recommendation, cards);
+        renderFinalRecommendation(recommendation, cards, location);
         es.close();
       });
 

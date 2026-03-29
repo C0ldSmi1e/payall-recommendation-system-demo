@@ -3,6 +3,7 @@ export interface Transaction {
   amount_usd: number;
   category: string;
   date: string;
+  location?: string; // ISO alpha-3 country code, inferred from merchant
 }
 
 export interface User {
@@ -182,8 +183,52 @@ export interface RankingResult {
   head_to_head_summary: string;
 }
 
+// Personalization insight — "we know you" moments
+export interface PersonalizationInsight {
+  type: "location_inference" | "spending_pattern" | "gap_analysis" | "savings_opportunity" | "pain_point";
+  title: string;
+  description: string;
+  evidence: string;
+  impact: "high" | "medium" | "low";
+}
+
+// Score breakdown — transparent reasoning per dimension
+export interface ScoreBreakdown {
+  dimension: string;           // e.g. "activation", "savings", "features"
+  label: string;               // e.g. "Ease of Getting Started"
+  score: number;               // 0-100
+  explanation: string;         // Why this score, referencing user's actual data
+}
+
+// User's relationship with Bit2Go (our revenue card)
+export type Bit2GoStatus = "no_card" | "has_card_low_usage" | "has_card_active";
+
+// Revenue action — what we want the user to do
+export interface RevenueAction {
+  type: "open_card" | "topup" | "cashout" | "increase_usage";
+  headline: string;          // "Open Your Bit2Go Card" or "Top Up Your Bit2Go"
+  description: string;       // Personalized reason tied to their spending
+  value_proposition: string; // Concrete benefit: "Start earning 1% cashback on your $8K/mo spend"
+  urgency: string;           // "Every day without this card costs you $X"
+  cta_text: string;          // Button text: "Open Card Now" or "Top Up $500"
+}
+
 // Step 6 output: Final Recommendation & Action Plan
 export interface FinalRecommendation {
+  // User understanding
+  insights: PersonalizationInsight[];
+  inferred_location: {
+    city_or_region: string;    // "Silicon Valley" not just "USA"
+    country_code: string;
+    registered_country: string;
+    mismatch: boolean;
+    explanation: string;
+  };
+
+  // Bit2Go-specific revenue action (always present)
+  bit2go_action: RevenueAction;
+
+  // Primary card recommendation (may or may not be Bit2Go)
   primary: {
     card_id: number;
     card_name: string;
@@ -192,6 +237,13 @@ export interface FinalRecommendation {
     reason: string;
     pros: string[];
     cons: string[];
+    score_breakdown: ScoreBreakdown[];
+    savings_vs_current: {
+      monthly_usd: number;
+      annual_usd: number;
+      breakdown: string;
+    };
+    conversion_hook: string;
     next_action: { type: string; description: string };
   };
   backups: {
@@ -201,6 +253,7 @@ export interface FinalRecommendation {
     tagline: string;
     reason: string;
     pick_this_if: string;
+    key_advantage: string;
   }[];
   why_not_others: { card_name: string; reason: string }[];
 }

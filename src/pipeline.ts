@@ -5,7 +5,6 @@ import type {
   SendFn,
   StepMeta,
   UserState,
-  FeasibleSet,
   PreferenceProfile,
   PerceptionResult,
   RankingResult,
@@ -19,8 +18,6 @@ import {
 import {
   STEP1_SYSTEM,
   buildStep1Prompt,
-  STEP2_SYSTEM,
-  buildStep2Prompt,
   STEP3_SYSTEM,
   buildStep3Prompt,
   STEP4_SYSTEM,
@@ -32,10 +29,19 @@ import {
   buildStep5ReRankPrompt,
   buildStep6ReRankPrompt,
 } from "./prompt";
+import { runConstraintEngine } from "./engine/constraint";
+import { rescoreAndSort } from "./engine/scoring";
+import { validateStepOutput, type ValidationResult } from "./engine/validators";
+import { inferLocation, type InferredLocation } from "./engine/location";
 
 const client = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
+
+// ---- Model selection ----
+// Sonnet for fast analysis steps, Opus for the critical scoring step
+const MODEL_FAST = "claude-sonnet-4-6";   // Steps 1, 3, 5, 6
+const MODEL_DEEP = "claude-opus-4-6";      // Step 4 (card perception — needs deep reasoning)
 
 // ---- Pipeline step metadata ----
 
@@ -48,7 +54,7 @@ export const PIPELINE_STEPS: StepMeta[] = [
   {
     id: "constraint_engine",
     name: "Constraint Engine",
-    description: "Deterministic filtering — hard constraints only",
+    description: "Deterministic filtering + location inference from spending patterns",
   },
   {
     id: "preference_analysis",
@@ -85,6 +91,88 @@ export const RERANK_STEPS: StepMeta[] = [
   },
 ];
 
+// ---- Personalization context builder ----
+
+function buildPersonalizationContext(
+  user: User,
+  inferredLoc: InferredLocation,
+  perceptionResult: PerceptionResult,
+  cards: Card[]
+) {
+  // Location evidence
+  let locationEvidence = "";
+  if (inferredLoc.primary_country !== user.country.toUpperCase()) {
+    locationEvidence = `IMPORTANT: User's card is registered in ${user.country}, but their actual spending location is ${inferredLoc.primary_country} (${inferredLoc.confidence} confidence). ${inferredLoc.evidence}`;
+    if (inferredLoc.secondary_countries.length > 0) {
+      locationEvidence += `\nSecondary locations: ${inferredLoc.secondary_countries.join(", ")}`;
+    }
+  } else {
+    locationEvidence = `User is in ${inferredLoc.primary_country}. ${inferredLoc.evidence}`;
+  }
+
+  // Spending analysis
+  const txns = user.transaction_history;
+  const catSpend: Record<string, { total: number; count: number }> = {};
+  let totalSpend = 0;
+  for (const t of txns) {
+    if (!catSpend[t.category]) catSpend[t.category] = { total: 0, count: 0 };
+    catSpend[t.category].total += t.amount_usd;
+    catSpend[t.category].count++;
+    totalSpend += t.amount_usd;
+  }
+  const sortedCats = Object.entries(catSpend).sort((a, b) => b[1].total - a[1].total);
+  const spendingAnalysis = txns.length > 0
+    ? [
+        `Total tracked: $${totalSpend.toFixed(0)} across ${txns.length} transactions`,
+        ...sortedCats.slice(0, 5).map(([cat, d]) => {
+          const avgPerTx = d.count > 0 ? (d.total / d.count).toFixed(0) : "0";
+          return `  ${cat}: $${d.total.toFixed(0)} (${((d.total / totalSpend) * 100).toFixed(0)}%, ${d.count} txns, avg $${avgPerTx}/tx)`;
+        }),
+      ].join("\n")
+    : "No transaction history available";
+
+  // Current card gaps
+  const ownedCards = user.owned_card_ids
+    .map((id) => cards.find((c) => c.id === id))
+    .filter(Boolean) as Card[];
+  const gaps: string[] = [];
+  if (ownedCards.length > 0) {
+    for (const c of ownedCards) {
+      if (user.needs_apple_pay && c.apple_wallet_support === 0) gaps.push(`${c.card_name} lacks Apple Pay`);
+      if (user.needs_google_pay && c.google_pay_support === 0) gaps.push(`${c.card_name} lacks Google Pay`);
+      if (user.needs_wechat_pay && c.wechat_pay_support === 0) gaps.push(`${c.card_name} lacks WeChat Pay`);
+      if (user.needs_alipay && c.alipay_support === 0) gaps.push(`${c.card_name} lacks Alipay`);
+      try {
+        const cashback = JSON.parse(c.cashback || "[]");
+        if (!cashback || (Array.isArray(cashback) && cashback.length === 0)) gaps.push(`${c.card_name} has no cashback program`);
+      } catch { gaps.push(`${c.card_name} has no cashback program`); }
+    }
+  }
+  const currentCardGaps = gaps.length > 0 ? gaps.join("\n") : "";
+
+  // Top perception scores for context
+  const top5 = perceptionResult.cards.slice(0, 5);
+  const perceptionData = top5.map((c) =>
+    `${c.card_name} (#${c.card_id}): composite=${c.composite_score}, activation=${c.outcomes.p_activation_success}, savings=$${c.outcomes.e_monthly_savings}, features=${c.outcomes.feature_coverage}, friction=${c.outcomes.friction_score}`
+  ).join("\n");
+
+  // Bit2Go status (card_id: 23) — our revenue card
+  const BIT2GO_ID = 23;
+  const hasBit2Go = user.owned_card_ids.includes(BIT2GO_ID);
+  const bit2GoTxns = user.transaction_history.filter((t) => t.card_id === BIT2GO_ID);
+  const bit2GoSpend = bit2GoTxns.reduce((s, t) => s + t.amount_usd, 0);
+  let bit2goStatus: string;
+  if (!hasBit2Go) {
+    bit2goStatus = `User does NOT have Bit2Go card. This is an OPEN CARD opportunity.\nMonthly spend: $${user.monthly_spend_usd.toLocaleString()} — all going to other cards.\nDrive: open_card action.`;
+  } else if (bit2GoTxns.length < 10 || bit2GoSpend < 500) {
+    bit2goStatus = `User HAS Bit2Go but LOW USAGE: ${bit2GoTxns.length} transactions, $${bit2GoSpend.toFixed(0)} total spend.\nThis is a TOP-UP opportunity. Drive them to load more funds and use Bit2Go more.\nDrive: topup action.`;
+  } else {
+    bit2goStatus = `User HAS Bit2Go and is ACTIVE: ${bit2GoTxns.length} transactions, $${bit2GoSpend.toFixed(0)} total spend.\nLook for cashout/optimization opportunities. They could earn more with better usage patterns.\nDrive: increase_usage or cashout action.`;
+  }
+
+  return { locationEvidence, spendingAnalysis, currentCardGaps, perceptionData, bit2goStatus };
+}
+
 // ---- Pipeline cache (steps 1-4 results per user) ----
 
 interface PipelineCache {
@@ -92,6 +180,7 @@ interface PipelineCache {
   preferenceProfile: PreferenceProfile;
   perceptionResult: PerceptionResult;
   cards: Card[];
+  personalizationContext: ReturnType<typeof buildPersonalizationContext>;
 }
 
 const pipelineCache = new Map<string, PipelineCache>();
@@ -110,13 +199,14 @@ async function runStep<T>(
   stepId: string,
   systemPrompt: string,
   userPrompt: string,
-  send: SendFn
+  send: SendFn,
+  model: string = MODEL_FAST
 ): Promise<{ reasoning: string; result: T }> {
   send("step_start", { stepId });
 
   let text = "";
   const stream = client.messages.stream({
-    model: "claude-opus-4-6",
+    model,
     max_tokens: 16000,
     system: systemPrompt,
     messages: [{ role: "user", content: userPrompt }],
@@ -141,6 +231,18 @@ async function runStep<T>(
 
   send("step_done", { stepId, reasoning, result });
   return { reasoning, result };
+}
+
+// ---- Validation helper ----
+
+function logValidation(stepId: string, v: ValidationResult, send: SendFn) {
+  if (!v.valid) {
+    console.warn(`[VALIDATOR] ${stepId} FAILED:`, v.errors);
+    send("step_warning", { stepId, type: "validation", errors: v.errors, warnings: v.warnings });
+  } else if (v.warnings.length > 0) {
+    console.warn(`[VALIDATOR] ${stepId} warnings:`, v.warnings);
+    send("step_warning", { stepId, type: "validation", errors: [], warnings: v.warnings });
+  }
 }
 
 // ---- Helper: build card metadata for frontend ----
@@ -173,6 +275,9 @@ function buildCardMeta(cards: Card[], cardIds: Set<number>) {
 }
 
 // ---- Full pipeline (Steps 1-6) ----
+// Execution order:
+//   Step 1 (LLM, Sonnet) → [Step 2 (instant) + Step 3 (LLM, Sonnet)] parallel
+//   → Step 4 (LLM, Opus) → Step 5 (LLM, Sonnet) → Step 6 (LLM, Sonnet)
 
 export async function runPipeline(
   user: User,
@@ -181,21 +286,51 @@ export async function runPipeline(
 ): Promise<void> {
   send("plan", { steps: PIPELINE_STEPS });
 
-  // Step 1: User State Analysis
+  // Step 1: User State Analysis (Sonnet — fast)
   const { result: userState } = await runStep<UserState>(
     "user_state",
     STEP1_SYSTEM,
     buildStep1Prompt(user, cards),
-    send
+    send,
+    MODEL_FAST
+  );
+  logValidation("user_state", validateStepOutput("user_state", userState), send);
+
+  // Step 2 + Step 3 in PARALLEL
+  // Step 2: Constraint Engine (DETERMINISTIC — instant, with location inference)
+  // Step 3: User Preference Analysis (Sonnet — only needs UserState)
+
+  // Also infer location upfront for personalization context
+  const inferredLoc = inferLocation(user);
+
+  const step2Promise = (async () => {
+    send("step_start", { stepId: "constraint_engine" });
+    const { feasibleSet, inferredLocation } = runConstraintEngine(userState, cards, user);
+    const constraintReasoning = [
+      `Deterministic filter: ${feasibleSet.feasible.length} feasible, ${feasibleSet.eliminated.length} eliminated out of ${cards.length} total.`,
+      ``,
+      `Location inference (${inferredLocation.confidence} confidence):`,
+      `  ${inferredLocation.evidence}`,
+      `  Primary: ${inferredLocation.primary_country} | Secondary: ${inferredLocation.secondary_countries.join(", ") || "none"}`,
+      ``,
+      `Eliminated:`,
+      ...(feasibleSet.eliminated.map((e) => `  - ${e.card_name} (#${e.card_id}): ${e.reason} [${e.blocked_reason_category}]`) || ["  (none)"]),
+    ].join("\n");
+    send("step_done", { stepId: "constraint_engine", reasoning: constraintReasoning, result: feasibleSet });
+    logValidation("constraint_engine", validateStepOutput("constraint_engine", feasibleSet, { totalCards: cards.length }), send);
+    return feasibleSet;
+  })();
+
+  const step3Promise = runStep<PreferenceProfile>(
+    "preference_analysis",
+    STEP3_SYSTEM,
+    buildStep3Prompt(userState),
+    send,
+    MODEL_FAST
   );
 
-  // Step 2: Constraint Engine
-  const { result: feasibleSet } = await runStep<FeasibleSet>(
-    "constraint_engine",
-    STEP2_SYSTEM,
-    buildStep2Prompt(userState, cards),
-    send
-  );
+  const [feasibleSet, { result: preferenceProfile }] = await Promise.all([step2Promise, step3Promise]);
+  logValidation("preference_analysis", validateStepOutput("preference_analysis", preferenceProfile), send);
 
   if (feasibleSet.feasible.length === 0) {
     send("step_error", {
@@ -205,15 +340,7 @@ export async function runPipeline(
     return;
   }
 
-  // Step 3: User Preference Analysis (CoT-Rec Step A)
-  const { result: preferenceProfile } = await runStep<PreferenceProfile>(
-    "preference_analysis",
-    STEP3_SYSTEM,
-    buildStep3Prompt(userState),
-    send
-  );
-
-  // Step 4: Card Perception Analysis (CoT-Rec Step B)
+  // Step 4: Card Perception Analysis (Opus — needs deep reasoning)
   const feasibleIds = new Set(feasibleSet.feasible.map((f) => f.card_id));
   const feasibleCards = cards.filter((c) => feasibleIds.has(c.id));
 
@@ -221,8 +348,16 @@ export async function runPipeline(
     "card_perception",
     STEP4_SYSTEM,
     buildStep4Prompt(preferenceProfile, feasibleCards),
-    send
+    send,
+    MODEL_DEEP
   );
+
+  // Deterministic re-scoring: overwrite LLM composite_score with formula-based score
+  rescoreAndSort(perceptionResult.cards, preferenceProfile);
+  logValidation("card_perception", validateStepOutput("card_perception", perceptionResult), send);
+
+  // Build personalization context for Step 6
+  const personalizationContext = buildPersonalizationContext(user, inferredLoc, perceptionResult, cards);
 
   // Cache steps 1-4 for re-ranking
   pipelineCache.set(user.id, {
@@ -230,9 +365,10 @@ export async function runPipeline(
     preferenceProfile,
     perceptionResult,
     cards,
+    personalizationContext,
   });
 
-  // Step 5: Reasoning & Ranking (top 10)
+  // Step 5: Reasoning & Ranking (Sonnet — top 10)
   const excludedIds = new Set(getExcludedCardIds(user.id));
   const top10 = perceptionResult.cards
     .filter((c) => !excludedIds.has(c.card_id))
@@ -244,16 +380,20 @@ export async function runPipeline(
     "reasoning_ranking",
     STEP5_SYSTEM,
     buildStep5Prompt(preferenceProfile, top10, top10CardDetails),
-    send
+    send,
+    MODEL_FAST
   );
+  logValidation("reasoning_ranking", validateStepOutput("reasoning_ranking", rankingResult), send);
 
-  // Step 6: Final Recommendation & Action Plan
+  // Step 6: Final Recommendation & Action Plan (Opus — critical for conversion quality)
   const { result: finalRec } = await runStep<FinalRecommendation>(
     "final_action",
     STEP6_SYSTEM,
-    buildStep6Prompt(userState, rankingResult),
-    send
+    buildStep6Prompt(userState, rankingResult, personalizationContext),
+    send,
+    MODEL_DEEP
   );
+  logValidation("final_action", validateStepOutput("final_action", finalRec), send);
 
   // Apply quick-fix overrides (KYC/topup only)
   const finalWithFixes = applyQuickFixOverrides(user.id, finalRec);
@@ -265,7 +405,11 @@ export async function runPipeline(
   ]);
   const recCards = buildCardMeta(cards, recCardIds);
 
-  send("pipeline_done", { recommendation: finalWithFixes, cards: recCards });
+  send("pipeline_done", {
+    recommendation: finalWithFixes,
+    cards: recCards,
+    location: { inferred: inferredLoc.primary_country, registered: user.country, evidence: inferredLoc.evidence, confidence: inferredLoc.confidence },
+  });
 }
 
 // ---- Re-rank pipeline (Steps 5+6 only, with feedback context) ----
@@ -285,14 +429,15 @@ export async function reRankPipeline(
 
   send("plan", { steps: RERANK_STEPS });
 
-  const { userState, preferenceProfile, perceptionResult, cards } = cache;
+  const { userState, preferenceProfile, perceptionResult, cards, personalizationContext } = cache;
   const feedbackContext = buildFeedbackContext(userId);
   const excludedIds = new Set(getExcludedCardIds(userId));
 
-  // Filter out excluded cards from perception results
+  // Filter out excluded cards and re-score with deterministic engine
   const remaining = perceptionResult.cards.filter(
     (c) => !excludedIds.has(c.card_id)
   );
+  rescoreAndSort(remaining, preferenceProfile);
 
   if (remaining.length === 0) {
     send("step_error", {
@@ -306,20 +451,22 @@ export async function reRankPipeline(
   const top10Ids = new Set(top10.map((c) => c.card_id));
   const top10CardDetails = cards.filter((c) => top10Ids.has(c.id));
 
-  // Re-run Step 5 with feedback context
+  // Re-run Step 5 with feedback context (Sonnet)
   const { result: rankingResult } = await runStep<RankingResult>(
     "rerank_reasoning",
     STEP5_SYSTEM,
     buildStep5ReRankPrompt(preferenceProfile, top10, top10CardDetails, feedbackContext),
-    send
+    send,
+    MODEL_FAST
   );
 
-  // Re-run Step 6 with feedback context
+  // Re-run Step 6 with feedback context (Opus)
   const { result: finalRec } = await runStep<FinalRecommendation>(
     "rerank_final",
     STEP6_SYSTEM,
-    buildStep6ReRankPrompt(userState, rankingResult, feedbackContext),
-    send
+    buildStep6ReRankPrompt(userState, rankingResult, feedbackContext, personalizationContext),
+    send,
+    MODEL_FAST
   );
 
   // Apply quick-fix overrides

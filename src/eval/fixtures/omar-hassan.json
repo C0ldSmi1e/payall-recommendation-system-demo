@@ -1,0 +1,27 @@
+{
+  "id": "omar-hassan-v1",
+  "name": "omar-hassan-anonymous-online",
+  "description": "UAE resident, unverified KYC, online-only $1200/mo, wants privacy + no-KYC + low fees. Virtual card only.",
+  "user_id": "4",
+  "expectations": {
+    "constraint": {
+      "must_eliminate": [],
+      "must_keep": [23, 26, 34, 62, 29, 43, 42, 33, 27, 30]
+    },
+    "scoring": {
+      "top_5_must_include": [],
+      "top_10_must_include": [23],
+      "must_not_rank_high": [],
+      "score_ordering": []
+    },
+    "recommendation": {
+      "primary_candidates": [23, 26, 34, 29, 43, 42, 33, 62, 27, 30, 28, 64, 46, 31],
+      "must_not_recommend": []
+    },
+    "qualitative": {
+      "reason_must_mention": ["privacy"]
+    }
+  },
+  "confidence": "medium",
+  "notes": "No country blocks for ARE. Similar profile to Maria but more spending. Primary should be no-KYC with virtual card."
+}

@@ -1,0 +1,28 @@
+{
+  "id": "alex-chen-v1",
+  "name": "alex-chen-cashback-seeker",
+  "description": "US-based KYC-verified user, moderate spender ($3k/mo), wants cashback + low fees. Owns Redotpay (#40). Needs Apple Pay + physical card.",
+  "user_id": "1",
+  "expectations": {
+    "constraint": {
+      "must_eliminate": [40],
+      "must_keep": [23, 35, 41, 94, 9, 4, 5]
+    },
+    "scoring": {
+      "top_5_must_include": [],
+      "top_10_must_include": [9, 4, 35],
+      "must_not_rank_high": [],
+      "score_ordering": []
+    },
+    "recommendation": {
+      "primary_candidates": [9, 35, 4, 5, 41, 8, 16, 15, 18],
+      "must_not_recommend": [40]
+    },
+    "qualitative": {
+      "primary_must_have_feature": ["apple_wallet_support"],
+      "reason_must_mention": ["cashback"]
+    }
+  },
+  "confidence": "medium",
+  "notes": "USA blocks 35 cards. Good cashback cards available: Gemini(35), Crypto.com(9), Coinbase(4). All have Apple Pay."
+}

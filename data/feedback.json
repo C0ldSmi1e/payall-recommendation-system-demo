@@ -2,53 +2,16 @@
   "card_feedbacks": [
     {
       "user_id": "6",
-      "card_id": 23,
-      "action": "dislike",
-      "timestamp": 1774568552250
-    },
-    {
-      "user_id": "6",
       "card_id": 34,
       "action": "dislike",
-      "timestamp": 1774568816476
+      "timestamp": 1774822216298
     },
     {
-      "user_id": "5",
-      "card_id": 23,
+      "user_id": "1",
+      "card_id": 35,
       "action": "dislike",
-      "timestamp": 1774639015969
-    },
-    {
-      "user_id": "7",
-      "card_id": 23,
-      "action": "dislike",
-      "timestamp": 1774639672111
-    },
-    {
-      "user_id": "7",
-      "card_id": 3,
-      "action": "dislike",
-      "timestamp": 1774640314503
+      "timestamp": 1774822585554
     }
   ],
-  "opening_results": [
-    {
-      "user_id": "6",
-      "card_id": 34,
-      "card_name": "KazePay",
-      "kyc_success": true,
-      "topup_success": false,
-      "approval": true,
-      "timestamp": 1774568789573
-    },
-    {
-      "user_id": "6",
-      "card_id": 32,
-      "card_name": "Bitsika",
-      "kyc_success": true,
-      "topup_success": true,
-      "approval": false,
-      "timestamp": 1774568878062
-    }
-  ]
+  "opening_results": []
 }

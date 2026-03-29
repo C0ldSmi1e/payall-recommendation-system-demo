@@ -2,7 +2,9 @@
   "name": "cot-rec",
   "version": "1.0.0",
   "scripts": {
-    "dev": "bun run src/server.ts"
+    "dev": "bun run src/server.ts",
+    "eval": "bun run src/eval/runner.ts",
+    "eval:fast": "bun run src/eval/runner.ts --fast"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0"
