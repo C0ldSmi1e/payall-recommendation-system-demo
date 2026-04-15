@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>PayAll</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+:root{--bg:#060a14;--s1:#0c1120;--s2:#121a2e;--bd:#1c2540;--gold:#d4a853;--gold2:#b8922e;--goldbg:rgba(212,168,83,.08);--goldborder:rgba(212,168,83,.2);--blue:#3b82f6;--bluebg:rgba(59,130,246,.08);--r:#f87171;--t1:#eef0f8;--t2:#8a90a8;--t3:#4a5070;--t4:#2a3050;}
+html,body{height:100%;overflow:hidden;background:var(--bg);}
+body{font-family:'Inter',sans-serif;color:var(--t1);font-size:14px;}
+.shell{max-width:430px;margin:0 auto;height:100%;position:relative;overflow:hidden;}
+.safe{height:env(safe-area-inset-top,0px);background:var(--bg);}
+
+/* Screens */
+.sc{position:absolute;inset:0;top:env(safe-area-inset-top,0);bottom:56px;display:none;flex-direction:column;overflow:hidden;background:var(--bg);}
+.sc.on{display:flex;}
+.scr{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+
+/* Tab bar */
+.tabs{position:fixed;bottom:0;left:0;right:0;max-width:430px;margin:0 auto;display:flex;background:var(--s1);border-top:1px solid var(--bd);padding-bottom:env(safe-area-inset-bottom,0);z-index:50;}
+.tb{flex:1;padding:6px 0 4px;text-align:center;cursor:pointer;}
+.tb-i{font-size:18px;margin-bottom:1px;}
+.tb-l{font-size:9px;color:var(--t3);font-weight:600;letter-spacing:.02em;}
+.tb.on .tb-l{color:var(--gold);}
+
+/* Header */
+.hd{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:var(--bg);}
+.logo{font-size:15px;font-weight:800;color:var(--t1);}
+.logo em{font-style:normal;color:var(--gold);}
+.hd-r{display:flex;gap:6px;align-items:center;}
+.hbtn{padding:4px 10px;background:var(--s2);border:1px solid var(--bd);border-radius:16px;font-size:10px;color:var(--t2);cursor:pointer;font-family:inherit;font-weight:600;}
+.hbtn.w{border-color:var(--goldborder);color:var(--gold);background:var(--goldbg);}
+
+/* ============ HOME ============ */
+.bal{text-align:center;padding:16px 16px 12px;}
+.bal-label{font-size:11px;color:var(--t3);margin-bottom:2px;}
+.bal-amount{font-size:32px;font-weight:900;color:var(--t1);letter-spacing:-1px;}
+.bal-sub{font-size:11px;color:var(--t3);margin-top:1px;}
+
+.acts{display:flex;gap:0;padding:0 16px 14px;justify-content:center;}
+.act{width:68px;text-align:center;cursor:pointer;}
+.act-c{width:42px;height:42px;border-radius:50%;background:var(--goldbg);border:1px solid var(--goldborder);display:flex;align-items:center;justify-content:center;font-size:16px;margin:0 auto 4px;}
+.act-l{font-size:10px;color:var(--t2);font-weight:600;}
+
+/* AI Insight bar (首页内嵌 AI) */
+.ai-bar{margin:0 16px 10px;padding:12px 14px;background:linear-gradient(135deg,var(--s1),var(--s2));border:1px solid var(--bd);border-radius:12px;cursor:pointer;display:flex;gap:10px;align-items:center;}
+.ai-bar:active{opacity:.8;}
+.ai-dot{width:28px;height:28px;border-radius:50%;background:var(--goldbg);border:1px solid var(--goldborder);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;}
+.ai-text{flex:1;font-size:12px;color:var(--t2);line-height:1.4;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
+.ai-text b{color:var(--gold);font-weight:700;}
+.ai-arrow{color:var(--t3);font-size:14px;}
+
+/* Card hero */
+.hero{margin:0 16px 10px;background:linear-gradient(135deg,#0d1428,#0a1a30);border:1px solid var(--bd);border-radius:14px;padding:14px;position:relative;overflow:hidden;}
+.hero::after{content:'';position:absolute;top:-20px;right:-20px;width:80px;height:80px;background:radial-gradient(circle,rgba(212,168,83,.1),transparent);border-radius:50%;}
+.hero-badge{display:inline-block;background:var(--gold);color:#000;font-size:8px;font-weight:800;letter-spacing:.08em;padding:2px 6px;border-radius:3px;margin-bottom:6px;}
+.hero-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;}
+.hero-name{font-size:15px;font-weight:700;color:var(--t1);}
+.hero-score{font-size:14px;font-weight:800;color:var(--gold);}
+.hero-tag{font-size:11px;color:var(--blue);font-weight:600;margin-bottom:8px;}
+.hero-metrics{display:flex;gap:14px;margin-bottom:10px;}
+.hm{text-align:center;}
+.hm-val{font-size:16px;font-weight:800;color:var(--gold);}
+.hm-label{font-size:8px;color:var(--t3);text-transform:uppercase;letter-spacing:.04em;}
+.hero-btn{width:100%;padding:9px;background:var(--gold);color:#000;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;}
+
+/* Card list compact */
+.clist{padding:0 16px 10px;}
+.cl-title{font-size:10px;color:var(--t3);font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;}
+.cl-count{font-size:10px;color:var(--gold);font-weight:700;}
+.cl-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--s1);border:1px solid var(--bd);border-radius:10px;margin-bottom:6px;cursor:pointer;}
+.cl-item:active{background:var(--s2);}
+.cl-rank{width:22px;height:22px;border-radius:50%;background:var(--s2);border:1px solid var(--bd);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:var(--t3);flex-shrink:0;}
+.cl-item.best .cl-rank{background:var(--goldbg);border-color:var(--goldborder);color:var(--gold);}
+.cl-info{flex:1;min-width:0;}
+.cl-name{font-size:12px;font-weight:700;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.cl-sub{font-size:10px;color:var(--t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.cl-score{font-size:13px;font-weight:800;color:var(--gold);flex-shrink:0;}
+
+/* Aggregator bar */
+.agg{margin:0 16px 10px;padding:10px 14px;background:var(--s1);border:1px solid var(--bd);border-radius:10px;display:flex;align-items:center;gap:10px;}
+.agg-n{font-size:18px;font-weight:900;color:var(--gold);}
+.agg-t{font-size:11px;color:var(--t3);}
+
+/* ============ CARDS DETAIL ============ */
+.cd-item{margin:0 16px 10px;background:var(--s1);border:1px solid var(--bd);border-radius:14px;padding:14px;}
+.cd-item.best{border-color:var(--goldborder);}
+.cd-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;}
+.cd-name{font-size:14px;font-weight:700;color:var(--t1);}
+.cd-score{font-size:13px;font-weight:800;padding:2px 8px;border-radius:10px;background:var(--goldbg);color:var(--gold);}
+.cd-tag{font-size:11px;color:var(--blue);font-weight:600;margin-bottom:4px;}
+.cd-reason{font-size:11px;color:var(--t3);line-height:1.3;margin-bottom:6px;}
+.cd-chips{display:flex;flex-wrap:wrap;gap:3px;margin-bottom:6px;}
+.cd-chip{font-size:9px;padding:2px 6px;border-radius:6px;background:var(--s2);border:1px solid var(--bd);color:var(--t3);}
+.cd-chip.g{border-color:rgba(59,130,246,.3);color:var(--blue);}
+.cd-bd{margin-top:6px;}
+.cd-bd-row{display:flex;align-items:center;gap:6px;margin-bottom:4px;}
+.cd-bd-l{font-size:9px;color:var(--t3);width:64px;}
+.cd-bd-track{flex:1;height:3px;background:var(--s2);border-radius:2px;overflow:hidden;}
+.cd-bd-fill{height:100%;border-radius:2px;}
+.cd-bd-fill.hi{background:var(--gold);}.cd-bd-fill.md{background:var(--blue);}.cd-bd-fill.lo{background:var(--r);}
+.cd-bd-v{font-size:9px;color:var(--t3);width:20px;text-align:right;}
+.cd-bd-e{font-size:9px;color:var(--t4);margin-bottom:3px;padding-left:70px;}
+.cd-pros{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px;font-size:10px;}
+.cd-pros h5{font-size:9px;margin-bottom:2px;}.cd-pros .p h5{color:var(--gold);}.cd-pros .c h5{color:var(--r);}
+.cd-pros li{color:var(--t3);margin-left:8px;line-height:1.3;}
+.cd-actions{display:flex;gap:6px;margin-top:8px;}
+.cd-btn{flex:1;padding:8px;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;}
+.cd-btn.pri{background:var(--gold);color:#000;}
+.cd-btn.sec{background:var(--s2);border:1px solid var(--bd);color:var(--t2);}
+.cd-adv{font-size:10px;color:var(--gold);background:var(--goldbg);border:1px solid var(--goldborder);border-radius:4px;padding:3px 6px;margin-bottom:4px;}
+.cd-pti{font-size:10px;color:var(--blue);background:var(--bluebg);border:1px solid rgba(59,130,246,.2);border-radius:4px;padding:3px 6px;}
+
+/* ============ TOPUP / CASHOUT / PAY ============ */
+.flow-hd{text-align:center;padding:20px 16px 12px;}
+.flow-hd h2{font-size:16px;font-weight:700;color:var(--t1);margin-bottom:2px;}
+.flow-hd p{font-size:11px;color:var(--t3);}
+.amount-box{text-align:center;padding:12px 16px;}
+.amount-input{font-size:36px;font-weight:900;color:var(--t1);background:none;border:none;text-align:center;width:100%;outline:none;font-family:inherit;caret-color:var(--gold);}
+.amount-input::placeholder{color:var(--t4);}
+.amount-unit{font-size:12px;color:var(--t3);margin-top:2px;}
+.presets{display:flex;gap:6px;justify-content:center;padding:0 16px 16px;}
+.preset{padding:6px 14px;background:var(--s1);border:1px solid var(--bd);border-radius:16px;font-size:11px;color:var(--t2);cursor:pointer;font-family:inherit;font-weight:600;}
+.preset.on{border-color:var(--goldborder);color:var(--gold);background:var(--goldbg);}
+.flow-details{margin:0 16px;padding:12px 14px;background:var(--s1);border:1px solid var(--bd);border-radius:10px;}
+.flow-row{display:flex;justify-content:space-between;padding:6px 0;font-size:12px;}
+.flow-row+.flow-row{border-top:1px solid var(--bd);}
+.flow-row span:first-child{color:var(--t3);}
+.flow-row span:last-child{color:var(--t1);font-weight:600;}
+.flow-row .gold{color:var(--gold);}
+.flow-btn{margin:16px;padding:13px;background:var(--gold);color:#000;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;width:calc(100% - 32px);}
+.flow-btn:disabled{background:var(--t4);color:var(--t3);}
+
+/* Pay screen extras */
+.pay-to{margin:0 16px 12px;padding:12px 14px;background:var(--s1);border:1px solid var(--bd);border-radius:10px;}
+.pay-to label{font-size:10px;color:var(--t3);display:block;margin-bottom:4px;}
+.pay-to input{width:100%;padding:8px 10px;background:var(--bg);border:1px solid var(--bd);border-radius:8px;color:var(--t1);font-size:12px;font-family:monospace;outline:none;}
+.pay-to input:focus{border-color:var(--gold);}
+.pay-methods{display:flex;gap:8px;padding:0 16px 12px;}
+.pay-method{flex:1;padding:10px;background:var(--s1);border:1px solid var(--bd);border-radius:10px;text-align:center;cursor:pointer;font-size:12px;color:var(--t2);}
+.pay-method.on{border-color:var(--goldborder);color:var(--gold);}
+.pay-method-icon{font-size:20px;margin-bottom:2px;}
+
+/* Cashout methods */
+.co-method{display:flex;align-items:center;gap:10px;padding:12px;margin:0 16px 8px;background:var(--s1);border:1px solid var(--bd);border-radius:10px;cursor:pointer;}
+.co-method.on{border-color:var(--goldborder);}
+.co-icon{font-size:20px;}
+.co-text{flex:1;}
+.co-name{font-size:12px;font-weight:700;color:var(--t1);}
+.co-sub{font-size:10px;color:var(--t3);}
+.co-check{width:16px;height:16px;border-radius:50%;border:2px solid var(--bd);}
+.co-method.on .co-check{border-color:var(--gold);background:var(--gold);}
+
+/* ============ CHAT ============ */
+.chat-body{flex:1;overflow-y:auto;padding:10px 14px;display:flex;flex-direction:column;gap:6px;}
+.cm{max-width:80%;padding:8px 12px;border-radius:14px;font-size:12px;line-height:1.5;}
+.cm.u{align-self:flex-end;background:var(--s2);color:var(--t1);border-bottom-right-radius:4px;}
+.cm.a{align-self:flex-start;background:var(--s1);color:var(--t2);border:1px solid var(--bd);border-bottom-left-radius:4px;}
+.cm .tt{display:inline-block;background:var(--goldbg);border:1px solid var(--goldborder);color:var(--gold);font-size:9px;padding:1px 5px;border-radius:6px;margin:2px 0;}
+.qbtns{display:flex;flex-wrap:wrap;gap:4px;padding:6px 14px;}
+.qb{padding:5px 10px;background:var(--s1);border:1px solid var(--bd);color:var(--t3);border-radius:16px;font-size:9px;cursor:pointer;font-family:inherit;}
+.chat-bar{padding:8px 14px;border-top:1px solid var(--bd);display:flex;gap:6px;padding-bottom:max(8px,env(safe-area-inset-bottom));}
+.ci{flex:1;padding:9px 12px;background:var(--s1);border:1px solid var(--bd);border-radius:10px;color:var(--t1);font-size:12px;outline:none;resize:none;font-family:inherit;}
+.ci:focus{border-color:var(--gold);}
+.cs{padding:9px 16px;background:var(--gold);color:#000;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;}
+
+/* Loading */
+.ld{position:absolute;inset:0;background:var(--bg);display:none;flex-direction:column;align-items:center;justify-content:center;z-index:40;}
+.ld.on{display:flex;}
+.ld-spin{width:36px;height:36px;border:3px solid var(--bd);border-top-color:var(--gold);border-radius:50%;animation:sp 1s linear infinite;margin-bottom:14px;}
+@keyframes sp{to{transform:rotate(360deg);}}
+.ld-text{font-size:12px;color:var(--t3);}
+.ld-bar{width:180px;height:3px;background:var(--bd);border-radius:2px;margin-top:10px;overflow:hidden;}
+.ld-fill{height:100%;background:var(--gold);border-radius:2px;transition:width .5s;}
+.toast{position:fixed;top:16px;left:16px;right:16px;max-width:430px;margin:0 auto;background:rgba(248,113,113,.12);border:1px solid var(--r);border-radius:8px;padding:10px 14px;color:var(--r);font-size:11px;z-index:60;display:none;}.toast.on{display:block;}
+</style>
+</head>
+<body>
+<div class="shell">
+<div class="safe"></div>
+<div class="ld on" id="ld"><div class="ld-spin"></div><div class="ld-text" id="ldText">分析中...</div><div class="ld-bar"><div class="ld-fill" id="ldFill" style="width:0%"></div></div></div>
+
+<!-- HOME -->
+<div class="sc on" id="scHome">
+<div class="hd"><div class="logo"><em>PayAll</em></div><div class="hd-r"><button class="hbtn" onclick="tLang()" id="lBtn">EN</button><button class="hbtn" id="wBtn" onclick="cWallet()">连接钱包</button></div></div>
+<div class="scr">
+  <div class="bal"><div class="bal-label" id="balLabel">总余额</div><div class="bal-amount" id="balAmt">-</div><div class="bal-sub" id="balSub"></div></div>
+  <div class="acts">
+    <div class="act" onclick="go('topup')"><div class="act-c">↑</div><div class="act-l" data-i="充值">充值</div></div>
+    <div class="act" onclick="go('pay')"><div class="act-c">→</div><div class="act-l" data-i="支付">支付</div></div>
+    <div class="act" onclick="go('cashout')"><div class="act-c">↓</div><div class="act-l" data-i="出金">出金</div></div>
+    <div class="act" onclick="go('cards')"><div class="act-c">◎</div><div class="act-l" data-i="选卡">选卡</div></div>
+  </div>
+  <div id="aiBar"></div>
+  <div id="heroCard"></div>
+  <div id="cardList"></div>
+  <div class="agg" id="aggBar" style="display:none"><div class="agg-n" id="aggN">94</div><div class="agg-t" id="aggT" data-i="agg">张加密卡已聚合分析，为你匹配最优方案</div></div>
+</div>
+</div>
+
+<!-- CARDS -->
+<div class="sc" id="scCards">
+<div class="hd"><div class="logo" data-i="卡片对比">卡片对比</div></div>
+<div class="scr"><div id="cardsDetail" style="padding-top:8px;"></div></div>
+</div>
+
+<!-- TOPUP -->
+<div class="sc" id="scTopup">
+<div class="hd"><div class="logo" data-i="充值">充值</div></div>
+<div class="scr">
+  <div class="flow-hd"><h2 data-i="充值到 Bit2Go">充值到 Bit2Go</h2><p>USDT → Bit2Go</p></div>
+  <div class="amount-box"><input class="amount-input" id="tuAmt" type="number" placeholder="0" value="500" oninput="calcTU()"><div class="amount-unit">USDT</div></div>
+  <div class="presets"><button class="preset" onclick="sTU(100)">$100</button><button class="preset on" onclick="sTU(500)">$500</button><button class="preset" onclick="sTU(1000)">$1K</button><button class="preset" onclick="sTU(5000)">$5K</button></div>
+  <div class="flow-details"><div class="flow-row"><span data-i="手续费">手续费 1%</span><span id="tuFee">$5.00</span></div><div class="flow-row"><span data-i="合计">合计</span><span id="tuTotal">505 USDT</span></div><div class="flow-row"><span data-i="到账">到账</span><span class="gold" data-i="即时">即时 ⚡</span></div></div>
+  <button class="flow-btn" onclick="doTU()" data-i="确认充值">确认充值</button>
+</div>
+</div>
+
+<!-- PAY -->
+<div class="sc" id="scPay">
+<div class="hd"><div class="logo" data-i="支付">支付</div></div>
+<div class="scr">
+  <div class="flow-hd"><h2 data-i="发送支付">发送支付</h2><p data-i="从 Bit2Go 卡余额扣款">从 Bit2Go 卡余额扣款</p></div>
+  <div class="pay-methods">
+    <div class="pay-method on" onclick="selPay(this,'address')"><div class="pay-method-icon">📋</div><div data-i="地址转账">地址转账</div></div>
+    <div class="pay-method" onclick="selPay(this,'scan')"><div class="pay-method-icon">📷</div><div data-i="扫码支付">扫码支付</div></div>
+  </div>
+  <div class="pay-to"><label data-i="收款地址">收款地址</label><input id="payAddr" placeholder="0x... / 商户地址"></div>
+  <div class="amount-box"><input class="amount-input" id="payAmt" type="number" placeholder="0" value="100" oninput="calcPay()"><div class="amount-unit">USD</div></div>
+  <div class="flow-details"><div class="flow-row"><span data-i="手续费">手续费</span><span id="payFee">$0.00</span></div><div class="flow-row"><span data-i="合计">合计扣款</span><span id="payTotal">$100.00</span></div></div>
+  <button class="flow-btn" onclick="doPay()" data-i="确认支付">确认支付</button>
+</div>
+</div>
+
+<!-- CASHOUT -->
+<div class="sc" id="scCashout">
+<div class="hd"><div class="logo" data-i="出金">出金</div></div>
+<div class="scr">
+  <div class="flow-hd"><h2 data-i="出金到法币">出金到法币</h2><p data-i="加密货币 → 银行/刷卡">Crypto → Fiat</p></div>
+  <div class="co-method on" onclick="selCO(this)"><div class="co-icon">🏦</div><div class="co-text"><div class="co-name" data-i="银行转账">银行转账</div><div class="co-sub">1-3 天 · 1.5%</div></div><div class="co-check"></div></div>
+  <div class="co-method" onclick="selCO(this)"><div class="co-icon">💳</div><div class="co-text"><div class="co-name" data-i="刷卡消费">刷卡消费</div><div class="co-sub" data-i="即时">即时 · Visa</div></div><div class="co-check"></div></div>
+  <div class="co-method" onclick="selCO(this)"><div class="co-icon">🏧</div><div class="co-text"><div class="co-name">ATM</div><div class="co-sub" data-i="即时">即时</div></div><div class="co-check"></div></div>
+  <div class="amount-box"><input class="amount-input" id="coAmt" type="number" placeholder="0" value="1000" oninput="calcCO()"><div class="amount-unit">USD</div></div>
+  <div class="flow-details"><div class="flow-row"><span data-i="手续费">手续费 1.5%</span><span id="coFee">$15.00</span></div><div class="flow-row"><span data-i="到账">到账</span><span class="gold" id="coRecv">$985.00</span></div></div>
+  <button class="flow-btn" onclick="doCO()" data-i="确认出金">确认出金</button>
+</div>
+</div>
+
+<!-- CHAT -->
+<div class="sc" id="scChat">
+<div class="hd"><div class="logo">✦ <span data-i="AI 助手">AI 助手</span></div></div>
+<div class="chat-body" id="chatBody"></div>
+<div class="qbtns" id="qbtns"></div>
+<div class="chat-bar"><textarea class="ci" id="chatIn" rows="1" placeholder="输入问题..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();doChat();}"></textarea><button class="cs" onclick="doChat()">→</button></div>
+</div>
+
+<!-- Tabs -->
+<div class="tabs">
+  <div class="tb on" onclick="go('home')"><div class="tb-i">⌂</div><div class="tb-l" data-i="首页">首页</div></div>
+  <div class="tb" onclick="go('cards')"><div class="tb-i">◎</div><div class="tb-l" data-i="选卡">选卡</div></div>
+  <div class="tb" onclick="go('topup')"><div class="tb-i">↑</div><div class="tb-l" data-i="充值">充值</div></div>
+  <div class="tb" onclick="go('pay')"><div class="tb-i">→</div><div class="tb-l" data-i="支付">支付</div></div>
+  <div class="tb" onclick="go('chat')"><div class="tb-i">✦</div><div class="tb-l">AI</div></div>
+</div>
+<div class="toast" id="toast"></div>
+</div>
+
+<script>
+function esc(s){return s?String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'):''}
+let lang='zh',users=[],uid='6',R=null,CM=null,ctx='',msgs=[],wAddr=null,pDone=0;
+const screens=['home','cards','topup','pay','cashout','chat'];
+function go(id){screens.forEach(s=>{const el=document.getElementById('sc'+s.charAt(0).toUpperCase()+s.slice(1));if(el)el.classList.toggle('on',s===id);});document.querySelectorAll('.tb').forEach((el,i)=>el.classList.toggle('on',['home','cards','topup','pay','chat'][i]===id));}
+
+// i18n (minimal — data-i attributes use the Chinese text as key)
+const EN={'充值':'Top Up','支付':'Pay','出金':'Cash Out','选卡':'Cards','首页':'Home','AI 助手':'AI Assistant',
+'充值到 Bit2Go':'Top Up Bit2Go','发送支付':'Send Payment','从 Bit2Go 卡余额扣款':'From Bit2Go card balance',
+'出金到法币':'Cash Out to Fiat','加密货币 → 银行/刷卡':'Crypto → Bank/Card',
+'手续费':'Fee','合计':'Total','到账':'Arrival','即时':'Instant ⚡','确认充值':'Confirm Top Up','确认支付':'Confirm Pay','确认出金':'Confirm Cash Out',
+'地址转账':'Address','扫码支付':'Scan QR','收款地址':'Recipient','卡片对比':'Card Compare',
+'银行转账':'Bank Transfer','刷卡消费':'Card Spend','agg':'crypto cards aggregated, best match found',
+'q1':'Why this card?','q2':'$500 topup fee?','q3':'Cash out timing?','q4':'Compare cards?','q5':'Spending analysis','q6':'How to start?',
+};
+const ZH={'q1':'为什么推这张卡？','q2':'充值500U费用？','q3':'出金多久到账？','q4':'和其他卡比？','q5':'消费分析','q6':'怎么开始？'};
+function t(k){return lang==='en'?(EN[k]||k):k;}
+function tQ(k){return lang==='en'?(EN[k]||k):(ZH[k]||k);}
+function tLang(){lang=lang==='zh'?'en':'zh';document.getElementById('lBtn').textContent=lang==='zh'?'EN':'中文';document.querySelectorAll('[data-i]').forEach(el=>el.textContent=t(el.getAttribute('data-i')));if(R)renderHome();renderQ();}
+
+// Wallet
+async function cWallet(){
+  const p=window.okxwallet||window.ethereum;
+  if(!p){wAddr='demo';document.getElementById('wBtn').classList.add('w');document.getElementById('wBtn').textContent='Demo';document.getElementById('balAmt').textContent='$8,247';document.getElementById('balSub').textContent='≈ 8,247 USDT';return;}
+  try{const a=await p.request({method:'eth_requestAccounts'});wAddr=a[0];document.getElementById('wBtn').classList.add('w');document.getElementById('wBtn').textContent=wAddr.slice(0,4)+'..'+wAddr.slice(-3);
+    try{const b=await p.request({method:'eth_getBalance',params:[wAddr,'latest']});const eth=parseInt(b)/1e18;document.getElementById('balAmt').textContent='$'+(eth*3500).toFixed(0);document.getElementById('balSub').textContent='≈ '+eth.toFixed(4)+' ETH';}catch{}
+  }catch(e){console.log(e);}
+}
+
+// Init
+async function init(){
+  // Fire-and-forget precompute — warms the cache so startPipe below hits it.
+  fetch('/api/recommend/precompute?userId=6',{method:'POST'}).catch(()=>{});
+  const r=await fetch('/api/users');users=await r.json();
+  msgs=[{role:'assistant',content:lang==='zh'?'正在为你匹配最优卡片...':'Finding your best card...'}];renderChat();renderQ();
+  if(window.okxwallet||window.ethereum)cWallet();
+  else{document.getElementById('balAmt').textContent='$8,247';document.getElementById('balSub').textContent='≈ 8,247 USDT';}
+  startPipe('6');
+}
+
+function startPipe(id){
+  pDone=0;document.getElementById('ldFill').style.width='0%';document.getElementById('ldText').textContent=lang==='zh'?'分析中...':'Analyzing...';document.getElementById('ld').classList.add('on');
+  const es=new EventSource(`/api/recommend/stream?userId=${id}`);
+  es.addEventListener('plan',e=>{});
+  es.addEventListener('step_done',()=>{pDone++;document.getElementById('ldFill').style.width=Math.round(pDone/3*100)+'%';});
+  es.addEventListener('step_start',()=>{});es.addEventListener('step_stream',()=>{});es.addEventListener('step_warning',()=>{});
+  es.addEventListener('step_error',e=>{showToast(JSON.parse(e.data).error);document.getElementById('ld').classList.remove('on');es.close();});
+  es.addEventListener('pipeline_done',e=>{
+    const d=JSON.parse(e.data);R=d.recommendation;CM=d.cards;
+    document.getElementById('ld').classList.remove('on');
+    buildCtx();renderHome();renderCardsDetail();
+    const p=R.primary;
+    msgs=[{role:'assistant',content:(lang==='zh'?'分析完成！':'Done! ')+'**'+esc(p.card_name)+'** ('+parseInt(p.score)+')\n'+(p.conversion_hook?esc(p.conversion_hook):'')}];renderChat();
+    es.close();
+  });
+  es.onerror=()=>es.close();
+}
+function showToast(m){const el=document.getElementById('toast');el.textContent=m;el.classList.add('on');setTimeout(()=>el.classList.remove('on'),4000);}
+
+// Render Home
+function renderHome(){
+  if(!R)return;const p=R.primary,loc=R.inferred_location,ins=R.insights||[],b=R.bit2go_action,sav=p.savings_vs_current;
+
+  // AI insight bar (首页内嵌 — 点击进入 chat)
+  const aiText=ins.length?'<b>'+esc(ins[0].title)+'</b> — '+esc(ins[0].description).slice(0,60)+'...':(b?esc(b.value_proposition):'');
+  document.getElementById('aiBar').innerHTML=aiText?`<div class="ai-bar" onclick="go('chat')"><div class="ai-dot">✦</div><div class="ai-text">${aiText}</div><div class="ai-arrow">›</div></div>`:'';
+
+  // Hero card
+  document.getElementById('heroCard').innerHTML=`<div class="hero">
+    <div class="hero-badge">${b&&b.type==='open_card'?(lang==='zh'?'推荐开卡':'OPEN CARD'):'BEST MATCH'}</div>
+    <div class="hero-row"><div class="hero-name">${esc(p.card_name)}</div><div class="hero-score">${parseInt(p.score)||0}</div></div>
+    <div class="hero-tag">${esc(p.tagline)}</div>
+    <div class="hero-metrics">
+      ${sav&&sav.monthly_usd>0?`<div class="hm"><div class="hm-val">+$${parseInt(sav.monthly_usd)}</div><div class="hm-label">${lang==='zh'?'月省':'SAVE/MO'}</div></div>`:''}
+      ${sav&&sav.annual_usd>0?`<div class="hm"><div class="hm-val">$${parseInt(sav.annual_usd)}</div><div class="hm-label">${lang==='zh'?'年省':'SAVE/YR'}</div></div>`:''}
+      <div class="hm"><div class="hm-val">${parseInt(p.score)||0}</div><div class="hm-label">${lang==='zh'?'匹配度':'MATCH'}</div></div>
+    </div>
+    <button class="hero-btn" onclick="go('${b&&b.type!=='open_card'?'topup':'cards'}')">${b?esc(b.cta_text):(lang==='zh'?'查看详情':'Details')}</button>
+  </div>`;
+
+  // Card list (compact)
+  const all=[{name:p.card_name,score:parseInt(p.score)||0,sub:esc(p.tagline),best:true},...(R.backups||[]).map(bk=>({name:bk.card_name,score:parseInt(bk.score)||0,sub:esc(bk.pick_this_if),best:false}))];
+  document.getElementById('cardList').innerHTML=`<div class="clist"><div class="cl-title"><span>${lang==='zh'?'推荐排名':'Rankings'}</span><span class="cl-count" onclick="go('cards')">${lang==='zh'?'查看全部 →':'View all →'}</span></div>${all.map((c,i)=>`<div class="cl-item${c.best?' best':''}" onclick="go('cards')"><div class="cl-rank">${i+1}</div><div class="cl-info"><div class="cl-name">${esc(c.name)}</div><div class="cl-sub">${c.sub}</div></div><div class="cl-score">${c.score}</div></div>`).join('')}</div>`;
+
+  document.getElementById('aggBar').style.display='flex';
+}
+
+// Render Cards Detail
+function renderCardsDetail(){
+  if(!R)return;const p=R.primary,bks=R.backups||[],cm={};(CM||[]).forEach(c=>cm[c.id]=c);
+  function sc(s){return s>=70?'hi':s>=40?'md':'lo';}
+  function chips(c){return c?[c.kyc_required?'<span class="cd-chip">KYC</span>':'<span class="cd-chip g">No KYC</span>',c.apple_wallet_support?'<span class="cd-chip">Apple Pay</span>':'',c.atm_withdrawal_support?'<span class="cd-chip">ATM</span>':''].filter(Boolean).join(''):'';}
+
+  const pc=cm[p.card_id]||{};
+  let h=`<div class="cd-item best">
+    <div class="cd-head"><div class="cd-name">${esc(p.card_name)}</div><div class="cd-score">${parseInt(p.score)||0}</div></div>
+    <div class="cd-tag">${esc(p.tagline)}</div>
+    <div class="cd-chips">${chips(pc)}</div>
+    <div class="cd-reason">${esc(p.reason)}</div>
+    ${(p.score_breakdown||[]).length?'<div class="cd-bd">'+p.score_breakdown.map(d=>{const v=Math.min(100,Math.max(0,Math.round(d.score)));return`<div class="cd-bd-row"><div class="cd-bd-l">${esc(d.label)}</div><div class="cd-bd-track"><div class="cd-bd-fill ${sc(v)}" style="width:${v}%"></div></div><div class="cd-bd-v">${v}</div></div><div class="cd-bd-e">${esc(d.explanation)}</div>`;}).join('')+'</div>':''}
+    <div class="cd-pros"><div class="p"><h5>✓</h5><ul>${(p.pros||[]).map(x=>'<li>'+esc(x)+'</li>').join('')}</ul></div><div class="c"><h5>✗</h5><ul>${(p.cons||[]).map(x=>'<li>'+esc(x)+'</li>').join('')}</ul></div></div>
+    <div class="cd-actions"><button class="cd-btn pri" onclick="go('topup')">${lang==='zh'?'充值使用':'Top Up'}</button><button class="cd-btn sec" onclick="fb(${parseInt(p.card_id)||0},'dislike')">${lang==='zh'?'换一个':'Another'}</button></div>
+  </div>`;
+
+  bks.forEach(bk=>{h+=`<div class="cd-item">
+    <div class="cd-head"><div class="cd-name">${esc(bk.card_name)}</div><div class="cd-score">${parseInt(bk.score)||0}</div></div>
+    <div class="cd-tag">${esc(bk.tagline)}</div>
+    <div class="cd-reason">${esc(bk.reason)}</div>
+    ${bk.key_advantage?'<div class="cd-adv">'+esc(bk.key_advantage)+'</div>':''}
+    <div class="cd-pti">${esc(bk.pick_this_if)}</div>
+  </div>`;});
+
+  document.getElementById('cardsDetail').innerHTML=h;
+}
+
+// Flow calculators
+function sTU(v){document.getElementById('tuAmt').value=v;calcTU();document.querySelectorAll('.preset').forEach(el=>el.classList.toggle('on',parseInt(el.textContent.replace(/[$K]/g,''))===(v>=1000?v/1000:v)));}
+function calcTU(){const v=parseFloat(document.getElementById('tuAmt').value)||0;document.getElementById('tuFee').textContent='$'+(v*0.01).toFixed(2);document.getElementById('tuTotal').textContent=(v*1.01).toFixed(2)+' USDT';}
+function doTU(){alert(lang==='zh'?'充值请求已发送':'Top-up sent');}
+function selPay(el,type){document.querySelectorAll('.pay-method').forEach(m=>m.classList.remove('on'));el.classList.add('on');}
+function calcPay(){const v=parseFloat(document.getElementById('payAmt').value)||0;document.getElementById('payFee').textContent='$0.00';document.getElementById('payTotal').textContent='$'+v.toFixed(2);}
+function doPay(){const addr=document.getElementById('payAddr').value;const amt=document.getElementById('payAmt').value;if(!addr){showToast(lang==='zh'?'请输入收款地址':'Enter recipient');return;}alert(lang==='zh'?`支付 $${amt} 到 ${addr}`:`Pay $${amt} to ${addr}`);}
+function selCO(el){document.querySelectorAll('.co-method').forEach(m=>{m.classList.remove('on');m.querySelector('.co-check').textContent='';});el.classList.add('on');}
+function calcCO(){const v=parseFloat(document.getElementById('coAmt').value)||0;document.getElementById('coFee').textContent='$'+(v*0.015).toFixed(2);document.getElementById('coRecv').textContent='$'+(v*0.985).toFixed(2);}
+function doCO(){alert(lang==='zh'?'出金请求已提交':'Cash out submitted');}
+
+// Chat
+function buildCtx(){
+  if(!R)return;const u=users.find(u=>u.id===uid);if(!u)return;
+  const p=[`User:${u.name}`,`Monthly:$${u.monthly_spend_usd}`,`Reg:${u.country},Actual:${u.current_location}`];
+  if(R.inferred_location)p.push(`Inferred:${R.inferred_location.city_or_region}`);
+  if(R.insights)p.push(R.insights.map(i=>i.title+':'+i.description).join(';'));
+  p.push(`Primary:${R.primary.card_name}(${R.primary.score})`,R.primary.reason);
+  if(R.primary.savings_vs_current)p.push(`Savings:$${R.primary.savings_vs_current.monthly_usd}/mo`);
+  if(R.bit2go_action)p.push(`Action:${R.bit2go_action.headline}`);
+  (R.backups||[]).forEach(b=>p.push(`Alt:${b.card_name}(${b.score})`));
+  ctx=p.join('\n');
+}
+function renderQ(){document.getElementById('qbtns').innerHTML=['q1','q2','q3','q4','q5','q6'].map(k=>`<button class="qb" onclick="qa('${k}')">${tQ(k)}</button>`).join('');}
+function qa(k){document.getElementById('chatIn').value=tQ(k);doChat();}
+
+async function doChat(){
+  const inp=document.getElementById('chatIn'),m=inp.value.trim();if(!m)return;inp.value='';
+  msgs.push({role:'user',content:m});const a={role:'assistant',content:''};msgs.push(a);renderChat();
+  try{
+    const r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:msgs.slice(0,-1).map(m=>({role:m.role,content:m.content})),context:ctx,lang,userId:uid})});
+    const rd=r.body.getReader(),dec=new TextDecoder();let buf='';
+    while(true){const{done,value}=await rd.read();if(done)break;buf+=dec.decode(value,{stream:true});const lines=buf.split('\n');buf=lines.pop()||'';
+      for(const l of lines){if(!l.startsWith('data: '))continue;try{const d=JSON.parse(l.slice(6));if(d.tool){a.content+='\n['+d.tool+']\n';renderChat();}if(d.chunk){a.content+=d.chunk;renderChat();}if(d.done||d.error)break;}catch{}}
+    }
+  }catch{a.content+='[Error]';}
+  renderChat();
+}
+function fmtM(s){if(!s)return'...';let o=esc(s);o=o.replace(/\*\*([^*]+)\*\*/g,'<b style="color:var(--gold)">$1</b>');o=o.replace(/\n/g,'<br>');o=o.replace(/\[([^\]]*)\]/g,'<span class="tt">$1</span>');return o;}
+function renderChat(){const c=document.getElementById('chatBody');c.innerHTML=msgs.map(m=>`<div class="cm ${m.role==='user'?'u':'a'}">${fmtM(m.content)}</div>`).join('');c.scrollTop=c.scrollHeight;}
+
+// Feedback
+async function fb(id,action){
+  await fetch('/api/feedback/card',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:uid,card_id:id,action})});
+  if(action==='dislike'){
+    document.getElementById('ld').classList.add('on');document.getElementById('ldText').textContent=lang==='zh'?'重新匹配...':'Re-matching...';document.getElementById('ldFill').style.width='50%';
+    const es=new EventSource(`/api/recommend/rerank?userId=${uid}`);
+    es.addEventListener('pipeline_done',e=>{const d=JSON.parse(e.data);R=d.recommendation;CM=d.cards;document.getElementById('ld').classList.remove('on');buildCtx();renderHome();renderCardsDetail();go('home');es.close();});
+    es.addEventListener('step_error',e=>{showToast(JSON.parse(e.data).error);document.getElementById('ld').classList.remove('on');es.close();});
+    es.onerror=()=>es.close();
+  }
+}
+
+calcTU();calcCO();calcPay();
+init();
+</script>
+</body>
+</html>

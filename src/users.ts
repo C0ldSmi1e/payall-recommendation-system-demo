@@ -144,7 +144,7 @@ export const users: User[] = [
   {
     id: "6",
     name: "Alan Walker",
-    description: "Silicon Valley high-spender, frequent Hong Kong and Singapore traveler, heavy restaurant entertainer, wine and luxury enthusiast, highly value privacy and security (zero tolerance)",
+    description: "Silicon Valley high-spender, frequent Hong Kong and Singapore traveler, heavy restaurant entertainer, wine and luxury enthusiast, highly value privacy and security (zero kyc tolerance)",
     country: "HKG",
     current_location: "USA",
     kyc_verified: false,

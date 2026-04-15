@@ -21,7 +21,85 @@ import type {
 } from "./types";
 
 // ============================================================
-// STEP 1: User State Analysis
+// MERGED STEP 1+3: User Analysis (State + Preferences in one call)
+// ============================================================
+
+export const STEP_USER_ANALYSIS_SYSTEM = `You are a user analysis expert for a crypto card recommendation platform. Analyze the user's state AND preferences in one pass.
+
+## CRITICAL: Location inference
+The user's profile \`country\` field is UNRELIABLE for no-KYC card users — all no-KYC cards register users in Hong Kong by default. Infer ACTUAL location from:
+- Daily-life spending (dining, coffee, grocery) = where they live
+- Transaction amounts/patterns typical of specific regions
+- self_reported.country overrides everything
+- current_location is more reliable than country for no-KYC users
+
+If country="HKG" but transactions show US/European daily spending → their ACTUAL location is NOT Hong Kong.
+
+## Output TWO sections in one JSON:
+
+### user_state: Current state analysis
+- summary, hard_requirements (country/location based on INFERRED real location), spending_profile
+- derived_scores (all 0.0-1.0): kyc_friction_tolerance, travel_need_score, fee_sensitivity_score, instant_need_score, backup_card_need, spending_diversity
+- journey_position, current_mode, detected_intent
+
+### preferences: What matters most right now
+- right_now_priorities with weights (must sum to 1.0)
+- friction_budget: low/medium/high
+- value_vs_convenience, spending_insights, unmet_needs
+
+Be concise. Output JSON directly — minimal reasoning.
+
+\`\`\`json
+{
+  "user_state": {
+    "summary": "string",
+    "hard_requirements": { "country": "ISO3", "current_location": "ISO3", "kyc_status": "verified|unverified", "needs_physical": bool, "needs_virtual": bool, "payment_methods": [] },
+    "spending_profile": { "monthly_usd": number, "top_categories": [], "spending_pattern": "string" },
+    "preferences": { "fee_sensitivity": "low|medium|high", "priorities_ranked": [], "crypto_preferences": [], "preferred_topup": "string", "preferred_currency": "string" },
+    "deal_breakers": [], "nice_to_haves": [], "owned_card_context": "string",
+    "derived_scores": { "kyc_friction_tolerance": number, "travel_need_score": number, "fee_sensitivity_score": number, "instant_need_score": number, "backup_card_need": number, "spending_diversity": number },
+    "journey_position": "new_user|active_single_card|multi_card_user|heavy_spender",
+    "current_mode": "travel|routine|exploring|urgent",
+    "detected_intent": "string"
+  },
+  "preferences": {
+    "right_now_priorities": [{"factor":"string","weight":number}],
+    "short_term_intent": "string", "long_term_intent": "string",
+    "friction_budget": "low|medium|high",
+    "value_vs_convenience": "value|balanced|convenience",
+    "spending_insights": [], "unmet_needs": []
+  }
+}
+\`\`\``;
+
+export function buildUserAnalysisPrompt(user: User, cards: Card[]): string {
+  const hasCompletedKyc = user.owned_card_ids.some(
+    (id) => cards.find((c) => c.id === id)?.kyc_required === 1
+  );
+  const ownedCards = user.owned_card_ids
+    .map((id) => cards.find((c) => c.id === id))
+    .filter(Boolean)
+    .map((c) => ({ id: c!.id, name: c!.card_name, kyc_required: c!.kyc_required }));
+
+  let selfReportedSection = "";
+  if (user.self_reported) {
+    const sr = user.self_reported;
+    const parts: string[] = [];
+    if (sr.needs_description) parts.push(`User says: "${sr.needs_description}"`);
+    if (sr.country) parts.push(`Self-reported country: ${sr.country}`);
+    if (sr.device_type) parts.push(`Device: ${sr.device_type}`);
+    if (sr.preferred_assets) parts.push(`Preferred: ${sr.preferred_assets.join(", ")}`);
+    selfReportedSection = `## SELF-REPORTED (highest priority)\n${parts.join("\n")}\n\n`;
+  }
+
+  return `${selfReportedSection}## User Data
+${JSON.stringify({ ...user, kyc_completed_elsewhere: hasCompletedKyc, owned_cards_info: ownedCards }, null, 2)}
+
+Analyze state + preferences. Output JSON only.`;
+}
+
+// ============================================================
+// STEP 1: User State Analysis (kept for compatibility)
 // (Guideline Layer 2: User State Graph)
 // ============================================================
 

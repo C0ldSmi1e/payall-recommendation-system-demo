@@ -82,6 +82,12 @@ export interface StepMeta {
   description: string;
 }
 
+// Merged Step 1+3 output
+export interface UserAnalysis {
+  user_state: UserState;
+  preferences: PreferenceProfile;
+}
+
 // Step 1 output: User State Analysis
 export interface UserState {
   summary: string;
