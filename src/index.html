@@ -61,6 +61,16 @@
     .progress-fill { height: 100%; background: linear-gradient(90deg, #2aaa6a, #7c3aed); border-radius: 2px; transition: width 0.5s ease; }
     .progress-text { font-size: 11px; color: #555; margin-top: 6px; }
 
+    /* ---- Collapsible sections ---- */
+    .sec { margin-bottom: 1rem; }
+    .sec-hd { display:flex; align-items:center; justify-content:space-between; padding:10px 14px; background:#0d0d18; border:1px solid #151530; border-radius:10px; cursor:pointer; font-size:12px; color:#aaa; user-select:none; transition:background 0.15s; }
+    .sec-hd:hover { background:#12122a; color:#ddd; }
+    .sec-hd .chev { transition:transform 0.2s; color:#555; font-size:10px; }
+    .sec.collapsed .sec-hd { margin-bottom:0; }
+    .sec.collapsed .sec-body { display:none !important; }
+    .sec:not(.collapsed) .sec-hd { margin-bottom:10px; }
+    .sec:not(.collapsed) .sec-hd .chev { transform:rotate(90deg); color:#7c3aed; }
+
     /* ---- Results ---- */
     .results { display: none; }
     .results.visible { display: block; }
@@ -211,9 +221,15 @@
     </div>
   </div>
 
-  <div class="profile" id="profile" style="display:none"></div>
+  <div class="sec" id="secProfile" style="display:none">
+    <div class="sec-hd" onclick="toggleSec('secProfile')"><span data-i18n="sec_profile">👤 用户资料</span><span class="chev">▸</span></div>
+    <div class="sec-body"><div class="profile" id="profile"></div></div>
+  </div>
 
-  <div id="spendingSection" style="display:none"></div>
+  <div class="sec" id="secSpending" style="display:none">
+    <div class="sec-hd" onclick="toggleSec('secSpending')"><span data-i18n="sec_spending">📊 消费分析</span><span class="chev">▸</span></div>
+    <div class="sec-body"><div id="spendingSection"></div></div>
+  </div>
 
   <div class="ctas" id="ctas" style="display:none">
     <div class="cta-card" id="ctaOpen"><div class="cta-icon">💳</div><div class="cta-label" data-i18n="cta_open">开卡</div><div class="cta-desc" data-i18n="cta_open_d">零KYC即刻开通 Bit2Go，用加密货币全球消费</div></div>
@@ -284,6 +300,7 @@ const I18N = {
     m_topup:'充值', m_approval:'审批', m_cancel:'取消', m_submit:'提交',
     registered:'注册地', actual:'实际位置',
     has_bit2go:'已持有 Bit2Go', no_bit2go:'未持有 Bit2Go',
+    sec_profile:'👤 用户资料', sec_spending:'📊 消费分析', sec_analysis:'🧠 推荐解析',
   },
   en: {
     title:'Smart Recommendations', cta_open:'Open Card', cta_open_d:'Get Bit2Go with zero KYC — spend crypto globally',
@@ -301,6 +318,7 @@ const I18N = {
     m_topup:'Top-up', m_approval:'Approval', m_cancel:'Cancel', m_submit:'Submit',
     registered:'Registered', actual:'Actual',
     has_bit2go:'Has Bit2Go', no_bit2go:'No Bit2Go',
+    sec_profile:'👤 Profile', sec_spending:'📊 Spending', sec_analysis:'🧠 Analysis',
   }
 };
 function t(k){return I18N[currentLang]?.[k]||I18N.en[k]||k;}
@@ -337,8 +355,13 @@ function selectUser(user){
   startPipeline(user.id);
 }
 
+function toggleSec(id){document.getElementById(id).classList.toggle('collapsed');}
+function collapseAllSecs(){['secProfile','secSpending'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.add('collapsed');});}
+
 function renderProfile(u){
   const has23=u.owned_card_ids.includes(23);
+  document.getElementById('secProfile').style.display='block';
+  document.getElementById('secProfile').classList.remove('collapsed');
   document.getElementById('profile').style.display='block';
   document.getElementById('profile').innerHTML=`
     <div class="profile-top">
@@ -355,7 +378,9 @@ function renderProfile(u){
 
 function renderSpending(u){
   const sec=document.getElementById('spendingSection');
-  if(!u.transaction_history.length){sec.style.display='none';return;}
+  const wrap=document.getElementById('secSpending');
+  if(!u.transaction_history.length){wrap.style.display='none';sec.style.display='none';return;}
+  wrap.style.display='block';wrap.classList.remove('collapsed');
   const cat={};let total=0;
   u.transaction_history.forEach(t=>{const c=t.category.replace(/_/g,' ');cat[c]=(cat[c]||0)+t.amount_usd;total+=t.amount_usd;});
   const sorted=Object.entries(cat).sort((a,b)=>b[1]-a[1]).slice(0,6);
@@ -401,6 +426,7 @@ function startPipeline(userId){
     const{recommendation,cards}=JSON.parse(e.data);
     currentBaseRec=recommendation; lastCardsMeta=cards;
     document.getElementById('progress').classList.remove('visible');
+    collapseAllSecs();
     buildChatContext(recommendation,cards);
     renderFinalRecommendation(recommendation,cards);
     currentEventSource.close();
@@ -442,15 +468,18 @@ function renderFinalRecommendation(rec,cardsMeta){
     ].filter(Boolean).join('');
   }
 
-  let h=`<div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:12px;">${t('results_title')}</div>
-    ${locH}${insH}${b2gH}
+  const analysisInner=`${locH}${insH}`;
+  const analysisH=analysisInner?`<div class="sec collapsed" id="secAnalysis" style="margin-bottom:12px"><div class="sec-hd" onclick="toggleSec('secAnalysis')"><span>${t('sec_analysis')}</span><span class="chev">▸</span></div><div class="sec-body">${analysisInner}</div></div>`:'';
+  const bdWrapped=bdH?`<div class="sec collapsed" id="secBd"><div class="sec-hd" onclick="toggleSec('secBd')"><span>${t('bd_title')}</span><span class="chev">▸</span></div><div class="sec-body">${bdH}</div></div>`:'';
+
+  let h=`${analysisH}${b2gH}
     <div class="pcard"><div class="pcard-badge">BEST MATCH</div>
       <div class="pcard-head"><div class="pcard-name">${p.card_name}</div><div class="pcard-score ${sc(p.score)}">${p.score}</div></div>
       <div class="pcard-tag">${p.tagline}</div>
       <div class="pcard-chips">${chips(pc)}</div>
       ${hookH}${savH}
       <div class="pcard-reason">${p.reason}</div>
-      ${bdH}
+      ${bdWrapped}
       <div class="pcard-grid"><div class="pro"><h4>✓ Pros</h4><ul>${(p.pros||[]).map(x=>'<li>'+x+'</li>').join('')}</ul></div><div class="con"><h4>✗ Cons</h4><ul>${(p.cons||[]).map(x=>'<li>'+x+'</li>').join('')}</ul></div></div>
       <div class="act">→ ${p.next_action?.description||''}</div>
       <div class="fb-btns">
