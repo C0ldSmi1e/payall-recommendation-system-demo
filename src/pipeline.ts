@@ -13,8 +13,35 @@ import {
 import { runConstraintEngine } from "./engine/constraint";
 import { computeCardPerception } from "./engine/perception";
 import { rescoreAndSort } from "./engine/scoring";
+import { rescoreAndSortV2, buildV2Context } from "./engine/scoring-v2";
+import type { MultiOutcomeCardV2 } from "./engine/scoring-v2/types";
 import { validateStepOutput, type ValidationResult } from "./engine/validators";
 import { inferLocation, type InferredLocation } from "./engine/location";
+
+/**
+ * Dark-launch 开关：`SCORING_VERSION=v2` 启用新 scoring，其他值走 v1。
+ * 默认 v1（回滚零风险）。v2 在打分之外还会附加 `v2_trace` 用于 UI / debug / AB 对比。
+ */
+function getScoringVersion(): "v1" | "v2" {
+  const v = (process.env.SCORING_VERSION || "").toLowerCase();
+  return v === "v2" ? "v2" : "v1";
+}
+
+function rescoreAndSortByVersion(
+  cards: MultiOutcomeCardV2[],
+  allCards: Card[],
+  user: User,
+  userState: UserState,
+  preferences: PreferenceProfile,
+): void {
+  const version = getScoringVersion();
+  if (version === "v2") {
+    const ctx = buildV2Context();
+    rescoreAndSortV2(cards, allCards, user, userState, preferences, ctx);
+  } else {
+    rescoreAndSort(cards, preferences);
+  }
+}
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -79,6 +106,7 @@ function buildPersonalizationContext(user: User, inferredLoc: InferredLocation, 
 // ---- Pipeline cache ----
 
 interface PipelineCache {
+  user: User;
   userState: UserState;
   preferenceProfile: PreferenceProfile;
   perceptionResult: PerceptionResult;
@@ -184,7 +212,11 @@ export async function runPipeline(user: User, cards: Card[], send: SendFn): Prom
   const feasibleIds = new Set(feasibleSet.feasible.map((f) => f.card_id));
   const feasibleCards = cards.filter((c) => feasibleIds.has(c.id));
   const perceptionResult = computeCardPerception(feasibleCards, user, preferenceProfile);
-  rescoreAndSort(perceptionResult.cards, preferenceProfile);
+  // Dark-launch switch: SCORING_VERSION=v2 activates new scoring (attaches v2_trace too).
+  rescoreAndSortByVersion(
+    perceptionResult.cards as MultiOutcomeCardV2[],
+    cards, user, userState, preferenceProfile,
+  );
 
   const personalizationContext = buildPersonalizationContext(user, inferredLoc, perceptionResult, cards);
 
@@ -194,7 +226,7 @@ export async function runPipeline(user: User, cards: Card[], send: SendFn): Prom
     result: { feasible: feasibleSet.feasible.length, top3: perceptionResult.cards.slice(0, 3).map(c => ({ name: c.card_name, score: c.composite_score })) },
   });
 
-  pipelineCache.set(user.id, { userState, preferenceProfile, perceptionResult, cards, personalizationContext });
+  pipelineCache.set(user.id, { user, userState, preferenceProfile, perceptionResult, cards, personalizationContext });
 
   // ---- LLM Call 2: Combined Ranking + Recommendation (Sonnet, ONE call, ~8s) ----
   const excludedIds = new Set(getExcludedCardIds(user.id));
@@ -247,11 +279,14 @@ export async function reRankPipeline(userId: string, send: SendFn): Promise<void
   if (!cache) { send("step_error", { stepId: "rerank_final", error: "Run full pipeline first." }); return; }
 
   send("plan", { steps: RERANK_STEPS });
-  const { userState, preferenceProfile, perceptionResult, cards, personalizationContext } = cache;
+  const { user, userState, preferenceProfile, perceptionResult, cards, personalizationContext } = cache;
   const feedbackContext = buildFeedbackContext(userId);
   const excludedIds = new Set(getExcludedCardIds(userId));
   const remaining = perceptionResult.cards.filter((c) => !excludedIds.has(c.card_id));
-  rescoreAndSort(remaining, preferenceProfile);
+  rescoreAndSortByVersion(
+    remaining as MultiOutcomeCardV2[],
+    cards, user, userState, preferenceProfile,
+  );
   if (remaining.length === 0) { send("step_error", { stepId: "rerank_final", error: "No cards left." }); return; }
 
   const top10 = remaining.slice(0, 10);

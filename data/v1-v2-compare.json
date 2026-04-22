@@ -1,0 +1,2608 @@
+{
+  "generated_at": "2026-04-22T19:21:08.981Z",
+  "total_users": 7,
+  "bit2go": {
+    "v1_ranks": [
+      29,
+      2,
+      2,
+      18
+    ],
+    "v2_ranks": [
+      41,
+      49,
+      54,
+      62
+    ],
+    "v1_avg_rank": 12.75,
+    "v2_avg_rank": 51.5,
+    "v1_times_top1": 0,
+    "v2_times_top1": 0
+  },
+  "score_distribution_top10": {
+    "v1_all_scores": 70,
+    "v2_all_scores": 70,
+    "v1_mean": 75.22857142857143,
+    "v2_mean": 36.764285714285705,
+    "v1_stddev": 11.71588839210781,
+    "v2_stddev": 6.012293969485376,
+    "v1_hist": [
+      {
+        "range": "[0, 10)",
+        "count": 0
+      },
+      {
+        "range": "[10, 20)",
+        "count": 0
+      },
+      {
+        "range": "[20, 30)",
+        "count": 0
+      },
+      {
+        "range": "[30, 40)",
+        "count": 0
+      },
+      {
+        "range": "[40, 50)",
+        "count": 0
+      },
+      {
+        "range": "[50, 60)",
+        "count": 10
+      },
+      {
+        "range": "[60, 70)",
+        "count": 14
+      },
+      {
+        "range": "[70, 80)",
+        "count": 15
+      },
+      {
+        "range": "[80, 90)",
+        "count": 27
+      },
+      {
+        "range": "[90, 100)",
+        "count": 4
+      }
+    ],
+    "v2_hist": [
+      {
+        "range": "[0, 10)",
+        "count": 0
+      },
+      {
+        "range": "[10, 20)",
+        "count": 0
+      },
+      {
+        "range": "[20, 30)",
+        "count": 7
+      },
+      {
+        "range": "[30, 40)",
+        "count": 44
+      },
+      {
+        "range": "[40, 50)",
+        "count": 17
+      },
+      {
+        "range": "[50, 60)",
+        "count": 2
+      },
+      {
+        "range": "[60, 70)",
+        "count": 0
+      },
+      {
+        "range": "[70, 80)",
+        "count": 0
+      },
+      {
+        "range": "[80, 90)",
+        "count": 0
+      },
+      {
+        "range": "[90, 100)",
+        "count": 0
+      }
+    ]
+  },
+  "score_distribution_full": {
+    "v1_all_scores": 548,
+    "v2_all_scores": 548,
+    "v1_mean": 51.98905109489051,
+    "v2_mean": 14.892919708029185,
+    "v1_stddev": 27.065678912822165,
+    "v2_stddev": 12.936590690811174,
+    "v1_min": 0,
+    "v2_min": 0.29,
+    "v1_max": 90,
+    "v2_max": 52.27,
+    "v1_hist": [
+      {
+        "range": "[0, 10)",
+        "count": 62
+      },
+      {
+        "range": "[10, 20)",
+        "count": 33
+      },
+      {
+        "range": "[20, 30)",
+        "count": 41
+      },
+      {
+        "range": "[30, 40)",
+        "count": 47
+      },
+      {
+        "range": "[40, 50)",
+        "count": 34
+      },
+      {
+        "range": "[50, 60)",
+        "count": 49
+      },
+      {
+        "range": "[60, 70)",
+        "count": 96
+      },
+      {
+        "range": "[70, 80)",
+        "count": 98
+      },
+      {
+        "range": "[80, 90)",
+        "count": 84
+      },
+      {
+        "range": "[90, 100)",
+        "count": 4
+      }
+    ],
+    "v2_hist": [
+      {
+        "range": "[0, 10)",
+        "count": 252
+      },
+      {
+        "range": "[10, 20)",
+        "count": 111
+      },
+      {
+        "range": "[20, 30)",
+        "count": 94
+      },
+      {
+        "range": "[30, 40)",
+        "count": 71
+      },
+      {
+        "range": "[40, 50)",
+        "count": 18
+      },
+      {
+        "range": "[50, 60)",
+        "count": 2
+      },
+      {
+        "range": "[60, 70)",
+        "count": 0
+      },
+      {
+        "range": "[70, 80)",
+        "count": 0
+      },
+      {
+        "range": "[80, 90)",
+        "count": 0
+      },
+      {
+        "range": "[90, 100)",
+        "count": 0
+      }
+    ]
+  },
+  "persona_top3": {
+    "cashback": {
+      "priority": "cashback",
+      "users": [
+        "Alex Chen"
+      ],
+      "v1_top3": [
+        "Emoney(1)",
+        "Whitebit Nova(1)",
+        "Spritz(1)"
+      ],
+      "v2_top3": [
+        "Coinbase One(1)",
+        "Bybit(1)",
+        "Solid(1)"
+      ],
+      "top3_overlap": 0
+    },
+    "privacy": {
+      "priority": "privacy",
+      "users": [
+        "Maria Silva",
+        "Omar Hassan"
+      ],
+      "v1_top3": [
+        "Amp Black(2)",
+        "Bit2Go(2)",
+        "SolCard(2)"
+      ],
+      "v2_top3": [
+        "Coca(2)",
+        "OKX(1)",
+        "Rebind(1)"
+      ],
+      "top3_overlap": 1
+    },
+    "high_spending_limit": {
+      "priority": "high_spending_limit",
+      "users": [
+        "Yuki Tanaka"
+      ],
+      "v1_top3": [
+        "Ether.fi Cash(1)",
+        "Krak(1)",
+        "Whitebit Nova(1)"
+      ],
+      "v2_top3": [
+        "Coca(1)",
+        "Coinbase One(1)",
+        "Bybit(1)"
+      ],
+      "top3_overlap": 0
+    },
+    "travel_perks": {
+      "priority": "travel_perks",
+      "users": [
+        "Sophie Laurent"
+      ],
+      "v1_top3": [
+        "Bybit(1)",
+        "Coinbase One(1)",
+        "Trade Republic(1)"
+      ],
+      "v2_top3": [
+        "Bybit(1)",
+        "Coinbase One(1)",
+        "Coca(1)"
+      ],
+      "top3_overlap": 2
+    },
+    "no_kyc": {
+      "priority": "no_kyc",
+      "users": [
+        "Alan Walker"
+      ],
+      "v1_top3": [
+        "SolCard(1)",
+        "KazePay(1)",
+        "Bitsika(1)"
+      ],
+      "v2_top3": [
+        "Bybit(1)",
+        "Coinbase One(1)",
+        "Solid(1)"
+      ],
+      "top3_overlap": 0
+    },
+    "low_fees": {
+      "priority": "low_fees",
+      "users": [
+        "Kea"
+      ],
+      "v1_top3": [
+        "Emoney(1)",
+        "Whitebit Nova(1)",
+        "Spritz(1)"
+      ],
+      "v2_top3": [
+        "Karta(1)",
+        "Coinbase One(1)",
+        "Solid(1)"
+      ],
+      "top3_overlap": 0
+    }
+  },
+  "ranking_churn": {
+    "users_with_primary_changed": 5,
+    "avg_top10_jaccard": 0.18480550114782754,
+    "avg_top10_added": 7.142857142857143
+  },
+  "per_user": [
+    {
+      "user_id": "1",
+      "user_name": "Alex Chen",
+      "priorities": [
+        "cashback",
+        "low_fees",
+        "high_spending_limit"
+      ],
+      "feasible_count": 59,
+      "v1_top10": [
+        {
+          "rank": 1,
+          "card_id": 92,
+          "card_name": "Emoney",
+          "score": 88
+        },
+        {
+          "rank": 2,
+          "card_id": 84,
+          "card_name": "Whitebit Nova",
+          "score": 88
+        },
+        {
+          "rank": 3,
+          "card_id": 86,
+          "card_name": "Spritz",
+          "score": 88
+        },
+        {
+          "rank": 4,
+          "card_id": 3,
+          "card_name": "Bybit",
+          "score": 88
+        },
+        {
+          "rank": 5,
+          "card_id": 20,
+          "card_name": "Uphold",
+          "score": 87
+        },
+        {
+          "rank": 6,
+          "card_id": 14,
+          "card_name": "CL Card",
+          "score": 87
+        },
+        {
+          "rank": 7,
+          "card_id": 15,
+          "card_name": "Nexo",
+          "score": 85
+        },
+        {
+          "rank": 8,
+          "card_id": 13,
+          "card_name": "KuCard",
+          "score": 85
+        },
+        {
+          "rank": 9,
+          "card_id": 93,
+          "card_name": "Solid",
+          "score": 85
+        },
+        {
+          "rank": 10,
+          "card_id": 35,
+          "card_name": "Gemini",
+          "score": 84
+        }
+      ],
+      "v2_top10": [
+        {
+          "rank": 1,
+          "card_id": 5,
+          "card_name": "Coinbase One",
+          "score": 45.95
+        },
+        {
+          "rank": 2,
+          "card_id": 3,
+          "card_name": "Bybit",
+          "score": 43.67
+        },
+        {
+          "rank": 3,
+          "card_id": 93,
+          "card_name": "Solid",
+          "score": 42.33
+        },
+        {
+          "rank": 4,
+          "card_id": 14,
+          "card_name": "CL Card",
+          "score": 40.64
+        },
+        {
+          "rank": 5,
+          "card_id": 100,
+          "card_name": "Gnosis Pay",
+          "score": 39.92
+        },
+        {
+          "rank": 6,
+          "card_id": 60,
+          "card_name": "Karta",
+          "score": 39.76
+        },
+        {
+          "rank": 7,
+          "card_id": 86,
+          "card_name": "Spritz",
+          "score": 38.47
+        },
+        {
+          "rank": 8,
+          "card_id": 35,
+          "card_name": "Gemini",
+          "score": 38.07
+        },
+        {
+          "rank": 9,
+          "card_id": 13,
+          "card_name": "KuCard",
+          "score": 33.99
+        },
+        {
+          "rank": 10,
+          "card_id": 4,
+          "card_name": "Coinbase",
+          "score": 31.07
+        }
+      ],
+      "bit2go_rank_v1": 29,
+      "bit2go_rank_v2": 41,
+      "bit2go_score_v1": 44,
+      "bit2go_score_v2": 5.55,
+      "top10_added_in_v2": [
+        5,
+        100,
+        60,
+        4
+      ],
+      "top10_dropped_in_v2": [
+        92,
+        84,
+        20,
+        15
+      ],
+      "primary_card_changed": true,
+      "v1_primary": {
+        "card_id": 92,
+        "card_name": "Emoney"
+      },
+      "v2_primary": {
+        "card_id": 5,
+        "card_name": "Coinbase One"
+      },
+      "v1_all_scores": [
+        88,
+        88,
+        88,
+        88,
+        87,
+        87,
+        85,
+        85,
+        85,
+        84,
+        84,
+        84,
+        84,
+        84,
+        84,
+        83,
+        83,
+        81,
+        81,
+        81,
+        81,
+        80,
+        80,
+        77,
+        76,
+        76,
+        74,
+        67,
+        44,
+        44,
+        43,
+        40,
+        40,
+        40,
+        40,
+        40,
+        40,
+        39,
+        39,
+        37,
+        37,
+        36,
+        36,
+        36,
+        36,
+        35,
+        35,
+        35,
+        35,
+        33,
+        33,
+        33,
+        33,
+        32,
+        31,
+        29,
+        29,
+        28,
+        27
+      ],
+      "v2_all_scores": [
+        45.95,
+        43.67,
+        42.33,
+        40.64,
+        39.92,
+        39.76,
+        38.47,
+        38.07,
+        33.99,
+        31.07,
+        30.93,
+        29.97,
+        29.59,
+        29.59,
+        29.36,
+        28.27,
+        27.3,
+        26.75,
+        26.61,
+        25.68,
+        24.78,
+        24.35,
+        17.43,
+        15.33,
+        14.83,
+        14.19,
+        13.91,
+        12.38,
+        11.45,
+        11.31,
+        11.28,
+        11.24,
+        10.44,
+        10.08,
+        9.55,
+        8.9,
+        8.85,
+        8.56,
+        7.92,
+        7.17,
+        5.55,
+        5.18,
+        3.96,
+        3.89,
+        3.33,
+        3.09,
+        1.46,
+        1.44,
+        1.39,
+        1.34,
+        1.26,
+        1.25,
+        1.24,
+        1.21,
+        1.04,
+        1.02,
+        0.84,
+        0.82,
+        0.7
+      ]
+    },
+    {
+      "user_id": "2",
+      "user_name": "Maria Silva",
+      "priorities": [
+        "privacy",
+        "low_fees",
+        "no_kyc"
+      ],
+      "feasible_count": 94,
+      "v1_top10": [
+        {
+          "rank": 1,
+          "card_id": 64,
+          "card_name": "Amp Black",
+          "score": 74
+        },
+        {
+          "rank": 2,
+          "card_id": 23,
+          "card_name": "Bit2Go",
+          "score": 67
+        },
+        {
+          "rank": 3,
+          "card_id": 26,
+          "card_name": "SolCard",
+          "score": 60
+        },
+        {
+          "rank": 4,
+          "card_id": 34,
+          "card_name": "KazePay",
+          "score": 60
+        },
+        {
+          "rank": 5,
+          "card_id": 62,
+          "card_name": "Maxswap",
+          "score": 60
+        },
+        {
+          "rank": 6,
+          "card_id": 32,
+          "card_name": "Bitsika",
+          "score": 60
+        },
+        {
+          "rank": 7,
+          "card_id": 33,
+          "card_name": "Laso Finance",
+          "score": 60
+        },
+        {
+          "rank": 8,
+          "card_id": 43,
+          "card_name": "No KYC OMNI",
+          "score": 60
+        },
+        {
+          "rank": 9,
+          "card_id": 46,
+          "card_name": "Bit.Store",
+          "score": 59
+        },
+        {
+          "rank": 10,
+          "card_id": 28,
+          "card_name": "Yellowdotpay",
+          "score": 59
+        }
+      ],
+      "v2_top10": [
+        {
+          "rank": 1,
+          "card_id": 75,
+          "card_name": "OKX",
+          "score": 40.32
+        },
+        {
+          "rank": 2,
+          "card_id": 79,
+          "card_name": "Rebind",
+          "score": 37.11
+        },
+        {
+          "rank": 3,
+          "card_id": 47,
+          "card_name": "Coca",
+          "score": 36.87
+        },
+        {
+          "rank": 4,
+          "card_id": 3,
+          "card_name": "Bybit",
+          "score": 32.11
+        },
+        {
+          "rank": 5,
+          "card_id": 13,
+          "card_name": "KuCard",
+          "score": 31.73
+        },
+        {
+          "rank": 6,
+          "card_id": 98,
+          "card_name": "Cardano",
+          "score": 31.59
+        },
+        {
+          "rank": 7,
+          "card_id": 64,
+          "card_name": "Amp Black",
+          "score": 30.37
+        },
+        {
+          "rank": 8,
+          "card_id": 14,
+          "card_name": "CL Card",
+          "score": 29.82
+        },
+        {
+          "rank": 9,
+          "card_id": 60,
+          "card_name": "Karta",
+          "score": 27.18
+        },
+        {
+          "rank": 10,
+          "card_id": 56,
+          "card_name": "Krak",
+          "score": 27.14
+        }
+      ],
+      "bit2go_rank_v1": 2,
+      "bit2go_rank_v2": 49,
+      "bit2go_score_v1": 67,
+      "bit2go_score_v2": 10.11,
+      "top10_added_in_v2": [
+        75,
+        79,
+        47,
+        3,
+        13,
+        98,
+        14,
+        60,
+        56
+      ],
+      "top10_dropped_in_v2": [
+        23,
+        26,
+        34,
+        62,
+        32,
+        33,
+        43,
+        46,
+        28
+      ],
+      "primary_card_changed": true,
+      "v1_primary": {
+        "card_id": 64,
+        "card_name": "Amp Black"
+      },
+      "v2_primary": {
+        "card_id": 75,
+        "card_name": "OKX"
+      },
+      "v1_all_scores": [
+        74,
+        67,
+        60,
+        60,
+        60,
+        60,
+        60,
+        60,
+        59,
+        59,
+        53,
+        53,
+        53,
+        51,
+        51,
+        40,
+        40,
+        40,
+        40,
+        35,
+        35,
+        35,
+        35,
+        34,
+        32,
+        31,
+        31,
+        30,
+        30,
+        29,
+        29,
+        29,
+        24,
+        24,
+        23,
+        23,
+        22,
+        22,
+        22,
+        21,
+        21,
+        20,
+        20,
+        20,
+        19,
+        19,
+        19,
+        19,
+        19,
+        19,
+        16,
+        16,
+        16,
+        14,
+        13,
+        12,
+        12,
+        12,
+        12,
+        12,
+        12,
+        12,
+        10,
+        10,
+        10,
+        10,
+        10,
+        10,
+        10,
+        10,
+        9,
+        9,
+        9,
+        9,
+        9,
+        9,
+        7,
+        7,
+        7,
+        7,
+        7,
+        6,
+        6,
+        6,
+        6,
+        4,
+        4,
+        4,
+        4,
+        4,
+        3,
+        3,
+        0,
+        0
+      ],
+      "v2_all_scores": [
+        40.32,
+        37.11,
+        36.87,
+        32.11,
+        31.73,
+        31.59,
+        30.37,
+        29.82,
+        27.18,
+        27.14,
+        26.91,
+        26.54,
+        26.35,
+        26.06,
+        24.9,
+        23.87,
+        23.38,
+        22.29,
+        21.98,
+        21.47,
+        20.88,
+        19.24,
+        18.73,
+        18.6,
+        18.59,
+        18.57,
+        18.48,
+        18.27,
+        18.19,
+        18.11,
+        18,
+        16.38,
+        16.34,
+        16.17,
+        15.91,
+        15.43,
+        15.38,
+        14.48,
+        14.42,
+        14.27,
+        14.09,
+        13.99,
+        12.66,
+        12.6,
+        12.54,
+        11.78,
+        11.45,
+        11.24,
+        10.11,
+        8.66,
+        8.14,
+        8.1,
+        7.99,
+        7.24,
+        7.02,
+        7.02,
+        6.78,
+        6.58,
+        6.46,
+        6.24,
+        6.19,
+        4.71,
+        4.13,
+        4.06,
+        3.56,
+        3.51,
+        3.06,
+        2.99,
+        2.78,
+        2.37,
+        1.99,
+        1.94,
+        1.72,
+        1.69,
+        1.67,
+        1.63,
+        1.48,
+        1.45,
+        1.43,
+        1.42,
+        1.41,
+        1.31,
+        1.31,
+        1.3,
+        1.3,
+        1.29,
+        1.29,
+        1.26,
+        1.14,
+        1.12,
+        1.11,
+        1.07,
+        0.95,
+        0.56
+      ]
+    },
+    {
+      "user_id": "3",
+      "user_name": "Yuki Tanaka",
+      "priorities": [
+        "high_spending_limit",
+        "cashback",
+        "atm_access",
+        "travel_perks"
+      ],
+      "feasible_count": 92,
+      "v1_top10": [
+        {
+          "rank": 1,
+          "card_id": 41,
+          "card_name": "Ether.fi Cash",
+          "score": 90
+        },
+        {
+          "rank": 2,
+          "card_id": 56,
+          "card_name": "Krak",
+          "score": 90
+        },
+        {
+          "rank": 3,
+          "card_id": 84,
+          "card_name": "Whitebit Nova",
+          "score": 90
+        },
+        {
+          "rank": 4,
+          "card_id": 3,
+          "card_name": "Bybit",
+          "score": 90
+        },
+        {
+          "rank": 5,
+          "card_id": 47,
+          "card_name": "Coca",
+          "score": 88
+        },
+        {
+          "rank": 6,
+          "card_id": 53,
+          "card_name": "Trade Republic",
+          "score": 88
+        },
+        {
+          "rank": 7,
+          "card_id": 98,
+          "card_name": "Cardano",
+          "score": 88
+        },
+        {
+          "rank": 8,
+          "card_id": 20,
+          "card_name": "Uphold",
+          "score": 88
+        },
+        {
+          "rank": 9,
+          "card_id": 6,
+          "card_name": "CoinJar",
+          "score": 88
+        },
+        {
+          "rank": 10,
+          "card_id": 14,
+          "card_name": "CL Card",
+          "score": 88
+        }
+      ],
+      "v2_top10": [
+        {
+          "rank": 1,
+          "card_id": 47,
+          "card_name": "Coca",
+          "score": 52.27
+        },
+        {
+          "rank": 2,
+          "card_id": 5,
+          "card_name": "Coinbase One",
+          "score": 50.75
+        },
+        {
+          "rank": 3,
+          "card_id": 3,
+          "card_name": "Bybit",
+          "score": 49.27
+        },
+        {
+          "rank": 4,
+          "card_id": 98,
+          "card_name": "Cardano",
+          "score": 48.65
+        },
+        {
+          "rank": 5,
+          "card_id": 35,
+          "card_name": "Gemini",
+          "score": 47.67
+        },
+        {
+          "rank": 6,
+          "card_id": 14,
+          "card_name": "CL Card",
+          "score": 44.29
+        },
+        {
+          "rank": 7,
+          "card_id": 55,
+          "card_name": "Decard",
+          "score": 43.35
+        },
+        {
+          "rank": 8,
+          "card_id": 4,
+          "card_name": "Coinbase",
+          "score": 43.21
+        },
+        {
+          "rank": 9,
+          "card_id": 93,
+          "card_name": "Solid",
+          "score": 43.1
+        },
+        {
+          "rank": 10,
+          "card_id": 100,
+          "card_name": "Gnosis Pay",
+          "score": 42
+        }
+      ],
+      "bit2go_rank_v1": null,
+      "bit2go_rank_v2": null,
+      "bit2go_score_v1": null,
+      "bit2go_score_v2": null,
+      "top10_added_in_v2": [
+        5,
+        35,
+        55,
+        4,
+        93,
+        100
+      ],
+      "top10_dropped_in_v2": [
+        41,
+        56,
+        84,
+        53,
+        20,
+        6
+      ],
+      "primary_card_changed": true,
+      "v1_primary": {
+        "card_id": 41,
+        "card_name": "Ether.fi Cash"
+      },
+      "v2_primary": {
+        "card_id": 47,
+        "card_name": "Coca"
+      },
+      "v1_all_scores": [
+        90,
+        90,
+        90,
+        90,
+        88,
+        88,
+        88,
+        88,
+        88,
+        88,
+        87,
+        87,
+        87,
+        87,
+        87,
+        87,
+        86,
+        86,
+        86,
+        86,
+        86,
+        86,
+        86,
+        86,
+        86,
+        86,
+        86,
+        86,
+        86,
+        84,
+        84,
+        84,
+        84,
+        84,
+        83,
+        83,
+        83,
+        83,
+        83,
+        83,
+        83,
+        82,
+        82,
+        82,
+        82,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        80,
+        80,
+        79,
+        79,
+        79,
+        79,
+        79,
+        79,
+        78,
+        78,
+        78,
+        78,
+        77,
+        76,
+        76,
+        76,
+        76,
+        76,
+        76,
+        75,
+        75,
+        75,
+        75,
+        75,
+        75,
+        75,
+        75,
+        75,
+        73,
+        72,
+        72,
+        72,
+        71,
+        71,
+        69,
+        69,
+        68,
+        67,
+        67,
+        63
+      ],
+      "v2_all_scores": [
+        52.27,
+        50.75,
+        49.27,
+        48.65,
+        47.67,
+        44.29,
+        43.35,
+        43.21,
+        43.1,
+        42,
+        40.89,
+        39.61,
+        39.59,
+        39.33,
+        39.32,
+        37.3,
+        37.11,
+        36.58,
+        36.14,
+        36.02,
+        35.93,
+        35.41,
+        34.32,
+        34.17,
+        33.73,
+        32.21,
+        32.15,
+        32.02,
+        31.91,
+        31.44,
+        31.12,
+        29.8,
+        28.67,
+        28.55,
+        27.77,
+        26.28,
+        21.89,
+        21.25,
+        16.96,
+        14.32,
+        13.86,
+        13.81,
+        12.58,
+        12.19,
+        12.05,
+        11.92,
+        11.38,
+        11.06,
+        10.74,
+        10.07,
+        9.4,
+        9.22,
+        9.18,
+        9.14,
+        9.07,
+        8.99,
+        8.59,
+        8.35,
+        7.62,
+        7.31,
+        7.2,
+        6.48,
+        6.4,
+        4.89,
+        4.33,
+        3.52,
+        3.06,
+        3.03,
+        2.38,
+        1.9,
+        1.7,
+        1.62,
+        1.61,
+        1.6,
+        1.58,
+        1.55,
+        1.51,
+        1.37,
+        1.23,
+        1.22,
+        1.22,
+        1.21,
+        1.05,
+        1.04,
+        1.04,
+        1.03,
+        0.85,
+        0.83,
+        0.8,
+        0.7,
+        0.65,
+        0.44
+      ]
+    },
+    {
+      "user_id": "4",
+      "user_name": "Omar Hassan",
+      "priorities": [
+        "privacy",
+        "no_kyc",
+        "low_fees"
+      ],
+      "feasible_count": 94,
+      "v1_top10": [
+        {
+          "rank": 1,
+          "card_id": 64,
+          "card_name": "Amp Black",
+          "score": 84
+        },
+        {
+          "rank": 2,
+          "card_id": 23,
+          "card_name": "Bit2Go",
+          "score": 63
+        },
+        {
+          "rank": 3,
+          "card_id": 26,
+          "card_name": "SolCard",
+          "score": 56
+        },
+        {
+          "rank": 4,
+          "card_id": 34,
+          "card_name": "KazePay",
+          "score": 56
+        },
+        {
+          "rank": 5,
+          "card_id": 62,
+          "card_name": "Maxswap",
+          "score": 56
+        },
+        {
+          "rank": 6,
+          "card_id": 32,
+          "card_name": "Bitsika",
+          "score": 56
+        },
+        {
+          "rank": 7,
+          "card_id": 33,
+          "card_name": "Laso Finance",
+          "score": 56
+        },
+        {
+          "rank": 8,
+          "card_id": 29,
+          "card_name": "Ezzocard",
+          "score": 56
+        },
+        {
+          "rank": 9,
+          "card_id": 43,
+          "card_name": "No KYC OMNI",
+          "score": 56
+        },
+        {
+          "rank": 10,
+          "card_id": 42,
+          "card_name": "No KYC NEXUS 3D",
+          "score": 56
+        }
+      ],
+      "v2_top10": [
+        {
+          "rank": 1,
+          "card_id": 64,
+          "card_name": "Amp Black",
+          "score": 39.34
+        },
+        {
+          "rank": 2,
+          "card_id": 47,
+          "card_name": "Coca",
+          "score": 39.29
+        },
+        {
+          "rank": 3,
+          "card_id": 3,
+          "card_name": "Bybit",
+          "score": 34.78
+        },
+        {
+          "rank": 4,
+          "card_id": 75,
+          "card_name": "OKX",
+          "score": 34.71
+        },
+        {
+          "rank": 5,
+          "card_id": 98,
+          "card_name": "Cardano",
+          "score": 34.01
+        },
+        {
+          "rank": 6,
+          "card_id": 55,
+          "card_name": "Decard",
+          "score": 33.36
+        },
+        {
+          "rank": 7,
+          "card_id": 93,
+          "card_name": "Solid",
+          "score": 33.01
+        },
+        {
+          "rank": 8,
+          "card_id": 60,
+          "card_name": "Karta",
+          "score": 32.85
+        },
+        {
+          "rank": 9,
+          "card_id": 5,
+          "card_name": "Coinbase One",
+          "score": 32.6
+        },
+        {
+          "rank": 10,
+          "card_id": 14,
+          "card_name": "CL Card",
+          "score": 32.08
+        }
+      ],
+      "bit2go_rank_v1": 2,
+      "bit2go_rank_v2": 54,
+      "bit2go_score_v1": 63,
+      "bit2go_score_v2": 10.11,
+      "top10_added_in_v2": [
+        47,
+        3,
+        75,
+        98,
+        55,
+        93,
+        60,
+        5,
+        14
+      ],
+      "top10_dropped_in_v2": [
+        23,
+        26,
+        34,
+        62,
+        32,
+        33,
+        29,
+        43,
+        42
+      ],
+      "primary_card_changed": false,
+      "v1_primary": {
+        "card_id": 64,
+        "card_name": "Amp Black"
+      },
+      "v2_primary": {
+        "card_id": 64,
+        "card_name": "Amp Black"
+      },
+      "v1_all_scores": [
+        84,
+        63,
+        56,
+        56,
+        56,
+        56,
+        56,
+        56,
+        56,
+        56,
+        56,
+        54,
+        54,
+        54,
+        54,
+        35,
+        35,
+        35,
+        35,
+        35,
+        35,
+        33,
+        33,
+        33,
+        33,
+        32,
+        32,
+        32,
+        29,
+        29,
+        29,
+        29,
+        28,
+        26,
+        26,
+        26,
+        26,
+        26,
+        26,
+        26,
+        26,
+        25,
+        24,
+        24,
+        23,
+        22,
+        22,
+        20,
+        20,
+        17,
+        15,
+        15,
+        14,
+        14,
+        13,
+        10,
+        9,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "v2_all_scores": [
+        39.34,
+        39.29,
+        34.78,
+        34.71,
+        34.01,
+        33.36,
+        33.01,
+        32.85,
+        32.6,
+        32.08,
+        32.04,
+        28.36,
+        27.45,
+        26.54,
+        25.87,
+        24.85,
+        24.47,
+        23.88,
+        23.67,
+        23.25,
+        22.43,
+        22.29,
+        22.01,
+        21.66,
+        21.64,
+        21.53,
+        21.47,
+        21.32,
+        21.23,
+        19.92,
+        19.24,
+        18.85,
+        18.59,
+        17.52,
+        17.49,
+        17.44,
+        17.15,
+        17.11,
+        16.98,
+        15.47,
+        15.44,
+        15.12,
+        14.48,
+        13.73,
+        13.48,
+        13.31,
+        12.97,
+        12.6,
+        12.45,
+        12.28,
+        11.96,
+        11.69,
+        11.24,
+        10.11,
+        7.95,
+        7.51,
+        7.24,
+        6.58,
+        6.46,
+        6.41,
+        5.33,
+        5.02,
+        3.9,
+        3.56,
+        3.46,
+        3.39,
+        3.3,
+        3.24,
+        2.85,
+        2.77,
+        1.99,
+        1.99,
+        1.98,
+        1.97,
+        1.95,
+        1.83,
+        1.69,
+        1.67,
+        1.64,
+        1.53,
+        1.52,
+        1.51,
+        1.51,
+        1.5,
+        1.5,
+        1.48,
+        1.33,
+        1.32,
+        1.32,
+        1.3,
+        1.29,
+        1.21,
+        1.19,
+        0.63
+      ]
+    },
+    {
+      "user_id": "5",
+      "user_name": "Sophie Laurent",
+      "priorities": [
+        "travel_perks",
+        "cashback",
+        "wechat_alipay",
+        "high_spending_limit"
+      ],
+      "feasible_count": 93,
+      "v1_top10": [
+        {
+          "rank": 1,
+          "card_id": 3,
+          "card_name": "Bybit",
+          "score": 83
+        },
+        {
+          "rank": 2,
+          "card_id": 5,
+          "card_name": "Coinbase One",
+          "score": 79
+        },
+        {
+          "rank": 3,
+          "card_id": 53,
+          "card_name": "Trade Republic",
+          "score": 78
+        },
+        {
+          "rank": 4,
+          "card_id": 16,
+          "card_name": "Revolut Metal",
+          "score": 76
+        },
+        {
+          "rank": 5,
+          "card_id": 94,
+          "card_name": "Ready",
+          "score": 75
+        },
+        {
+          "rank": 6,
+          "card_id": 41,
+          "card_name": "Ether.fi Cash",
+          "score": 75
+        },
+        {
+          "rank": 7,
+          "card_id": 56,
+          "card_name": "Krak",
+          "score": 75
+        },
+        {
+          "rank": 8,
+          "card_id": 69,
+          "card_name": "Xportal",
+          "score": 75
+        },
+        {
+          "rank": 9,
+          "card_id": 92,
+          "card_name": "Emoney",
+          "score": 75
+        },
+        {
+          "rank": 10,
+          "card_id": 100,
+          "card_name": "Gnosis Pay",
+          "score": 75
+        }
+      ],
+      "v2_top10": [
+        {
+          "rank": 1,
+          "card_id": 3,
+          "card_name": "Bybit",
+          "score": 47.32
+        },
+        {
+          "rank": 2,
+          "card_id": 5,
+          "card_name": "Coinbase One",
+          "score": 43.39
+        },
+        {
+          "rank": 3,
+          "card_id": 47,
+          "card_name": "Coca",
+          "score": 40.24
+        },
+        {
+          "rank": 4,
+          "card_id": 100,
+          "card_name": "Gnosis Pay",
+          "score": 38.64
+        },
+        {
+          "rank": 5,
+          "card_id": 98,
+          "card_name": "Cardano",
+          "score": 37.73
+        },
+        {
+          "rank": 6,
+          "card_id": 55,
+          "card_name": "Decard",
+          "score": 34.92
+        },
+        {
+          "rank": 7,
+          "card_id": 59,
+          "card_name": "Bleap",
+          "score": 33.33
+        },
+        {
+          "rank": 8,
+          "card_id": 14,
+          "card_name": "CL Card",
+          "score": 33.23
+        },
+        {
+          "rank": 9,
+          "card_id": 75,
+          "card_name": "OKX",
+          "score": 32.74
+        },
+        {
+          "rank": 10,
+          "card_id": 4,
+          "card_name": "Coinbase",
+          "score": 32.44
+        }
+      ],
+      "bit2go_rank_v1": 18,
+      "bit2go_rank_v2": 62,
+      "bit2go_score_v1": 72,
+      "bit2go_score_v2": 4.44,
+      "top10_added_in_v2": [
+        47,
+        98,
+        55,
+        59,
+        14,
+        75,
+        4
+      ],
+      "top10_dropped_in_v2": [
+        53,
+        16,
+        94,
+        41,
+        56,
+        69,
+        92
+      ],
+      "primary_card_changed": false,
+      "v1_primary": {
+        "card_id": 3,
+        "card_name": "Bybit"
+      },
+      "v2_primary": {
+        "card_id": 3,
+        "card_name": "Bybit"
+      },
+      "v1_all_scores": [
+        83,
+        79,
+        78,
+        76,
+        75,
+        75,
+        75,
+        75,
+        75,
+        75,
+        75,
+        74,
+        74,
+        74,
+        74,
+        74,
+        73,
+        72,
+        72,
+        72,
+        72,
+        72,
+        72,
+        72,
+        71,
+        71,
+        71,
+        71,
+        71,
+        70,
+        70,
+        69,
+        69,
+        68,
+        68,
+        68,
+        68,
+        68,
+        67,
+        67,
+        67,
+        67,
+        67,
+        67,
+        66,
+        65,
+        65,
+        65,
+        65,
+        65,
+        64,
+        64,
+        64,
+        63,
+        63,
+        63,
+        63,
+        62,
+        62,
+        62,
+        62,
+        62,
+        61,
+        60,
+        60,
+        59,
+        59,
+        59,
+        59,
+        58,
+        58,
+        58,
+        55,
+        55,
+        55,
+        55,
+        55,
+        55,
+        54,
+        54,
+        54,
+        54,
+        53,
+        52,
+        52,
+        52,
+        52,
+        52,
+        49,
+        49,
+        48,
+        48,
+        46
+      ],
+      "v2_all_scores": [
+        47.32,
+        43.39,
+        40.24,
+        38.64,
+        37.73,
+        34.92,
+        33.33,
+        33.23,
+        32.74,
+        32.44,
+        32.27,
+        32.16,
+        31.77,
+        31.11,
+        30.24,
+        29.14,
+        28.8,
+        28.57,
+        27.5,
+        27.32,
+        27.32,
+        27.18,
+        27.11,
+        26.45,
+        26.2,
+        25.96,
+        24.76,
+        24.45,
+        24.35,
+        24.09,
+        23.4,
+        23.06,
+        21.31,
+        21.16,
+        20.35,
+        20.28,
+        12.23,
+        11.31,
+        11.28,
+        10.37,
+        10.27,
+        10.22,
+        8.37,
+        8.34,
+        8.34,
+        8.25,
+        8.25,
+        7.77,
+        7.72,
+        7.54,
+        7.45,
+        6.93,
+        6.78,
+        6.44,
+        6.36,
+        5.21,
+        5.14,
+        5.11,
+        5.02,
+        4.79,
+        4.53,
+        4.44,
+        4.16,
+        3.15,
+        2.94,
+        2.72,
+        2.65,
+        2.53,
+        2.2,
+        1.73,
+        1.46,
+        1.41,
+        1.29,
+        1.27,
+        1.27,
+        1.26,
+        1.13,
+        1.13,
+        1.13,
+        1.11,
+        1.06,
+        0.96,
+        0.95,
+        0.78,
+        0.78,
+        0.73,
+        0.62,
+        0.61,
+        0.59,
+        0.53,
+        0.43,
+        0.4,
+        0.29
+      ]
+    },
+    {
+      "user_id": "6",
+      "user_name": "Alan Walker",
+      "priorities": [
+        "no_kyc",
+        "high_spending_limit",
+        "low_fees",
+        "multi_currency",
+        "travel_perks"
+      ],
+      "feasible_count": 58,
+      "v1_top10": [
+        {
+          "rank": 1,
+          "card_id": 26,
+          "card_name": "SolCard",
+          "score": 87
+        },
+        {
+          "rank": 2,
+          "card_id": 34,
+          "card_name": "KazePay",
+          "score": 87
+        },
+        {
+          "rank": 3,
+          "card_id": 32,
+          "card_name": "Bitsika",
+          "score": 87
+        },
+        {
+          "rank": 4,
+          "card_id": 33,
+          "card_name": "Laso Finance",
+          "score": 87
+        },
+        {
+          "rank": 5,
+          "card_id": 43,
+          "card_name": "No KYC OMNI",
+          "score": 87
+        },
+        {
+          "rank": 6,
+          "card_id": 28,
+          "card_name": "Yellowdotpay",
+          "score": 85
+        },
+        {
+          "rank": 7,
+          "card_id": 29,
+          "card_name": "Ezzocard",
+          "score": 80
+        },
+        {
+          "rank": 8,
+          "card_id": 42,
+          "card_name": "No KYC NEXUS 3D",
+          "score": 80
+        },
+        {
+          "rank": 9,
+          "card_id": 31,
+          "card_name": "BingCard",
+          "score": 80
+        },
+        {
+          "rank": 10,
+          "card_id": 27,
+          "card_name": "Coinepay",
+          "score": 78
+        }
+      ],
+      "v2_top10": [
+        {
+          "rank": 1,
+          "card_id": 3,
+          "card_name": "Bybit",
+          "score": 40.24
+        },
+        {
+          "rank": 2,
+          "card_id": 5,
+          "card_name": "Coinbase One",
+          "score": 39.41
+        },
+        {
+          "rank": 3,
+          "card_id": 93,
+          "card_name": "Solid",
+          "score": 39.27
+        },
+        {
+          "rank": 4,
+          "card_id": 14,
+          "card_name": "CL Card",
+          "score": 38.11
+        },
+        {
+          "rank": 5,
+          "card_id": 60,
+          "card_name": "Karta",
+          "score": 35.9
+        },
+        {
+          "rank": 6,
+          "card_id": 86,
+          "card_name": "Spritz",
+          "score": 35.4
+        },
+        {
+          "rank": 7,
+          "card_id": 35,
+          "card_name": "Gemini",
+          "score": 34.92
+        },
+        {
+          "rank": 8,
+          "card_id": 72,
+          "card_name": "Rizon",
+          "score": 31.86
+        },
+        {
+          "rank": 9,
+          "card_id": 100,
+          "card_name": "Gnosis Pay",
+          "score": 31.41
+        },
+        {
+          "rank": 10,
+          "card_id": 13,
+          "card_name": "KuCard",
+          "score": 30.84
+        }
+      ],
+      "bit2go_rank_v1": null,
+      "bit2go_rank_v2": null,
+      "bit2go_score_v1": null,
+      "bit2go_score_v2": null,
+      "top10_added_in_v2": [
+        3,
+        5,
+        93,
+        14,
+        60,
+        86,
+        35,
+        72,
+        100,
+        13
+      ],
+      "top10_dropped_in_v2": [
+        26,
+        34,
+        32,
+        33,
+        43,
+        28,
+        29,
+        42,
+        31,
+        27
+      ],
+      "primary_card_changed": true,
+      "v1_primary": {
+        "card_id": 26,
+        "card_name": "SolCard"
+      },
+      "v2_primary": {
+        "card_id": 3,
+        "card_name": "Bybit"
+      },
+      "v1_all_scores": [
+        87,
+        87,
+        87,
+        87,
+        87,
+        85,
+        80,
+        80,
+        80,
+        78,
+        78,
+        77,
+        77,
+        77,
+        77,
+        75,
+        75,
+        75,
+        74,
+        74,
+        74,
+        74,
+        72,
+        72,
+        72,
+        72,
+        72,
+        72,
+        72,
+        72,
+        72,
+        72,
+        72,
+        71,
+        71,
+        71,
+        69,
+        69,
+        69,
+        69,
+        69,
+        69,
+        69,
+        68,
+        68,
+        67,
+        66,
+        66,
+        65,
+        64,
+        64,
+        64,
+        63,
+        62,
+        62,
+        61,
+        60,
+        58
+      ],
+      "v2_all_scores": [
+        40.24,
+        39.41,
+        39.27,
+        38.11,
+        35.9,
+        35.4,
+        34.92,
+        31.86,
+        31.41,
+        30.84,
+        27.02,
+        25.7,
+        25.68,
+        25.27,
+        24.72,
+        24.54,
+        23.49,
+        23.38,
+        21.73,
+        21.04,
+        20.11,
+        19.76,
+        18.92,
+        18.7,
+        17.95,
+        16.89,
+        16.65,
+        15.77,
+        14.88,
+        14.14,
+        13.38,
+        12.91,
+        12.81,
+        12.15,
+        10.35,
+        10.2,
+        9.99,
+        9.4,
+        9.11,
+        9.07,
+        8.94,
+        6.82,
+        6.58,
+        5.84,
+        2.65,
+        1.71,
+        1.42,
+        1.39,
+        1.37,
+        1.36,
+        1.36,
+        1.36,
+        1.34,
+        1.14,
+        1.12,
+        1.11,
+        1.07,
+        0.91
+      ]
+    },
+    {
+      "user_id": "7",
+      "user_name": "Kea",
+      "priorities": [
+        "low_fees",
+        "wide_acceptance",
+        "online_payments",
+        "multi_currency"
+      ],
+      "feasible_count": 58,
+      "v1_top10": [
+        {
+          "rank": 1,
+          "card_id": 92,
+          "card_name": "Emoney",
+          "score": 71
+        },
+        {
+          "rank": 2,
+          "card_id": 84,
+          "card_name": "Whitebit Nova",
+          "score": 71
+        },
+        {
+          "rank": 3,
+          "card_id": 86,
+          "card_name": "Spritz",
+          "score": 71
+        },
+        {
+          "rank": 4,
+          "card_id": 3,
+          "card_name": "Bybit",
+          "score": 71
+        },
+        {
+          "rank": 5,
+          "card_id": 1,
+          "card_name": "1inch",
+          "score": 69
+        },
+        {
+          "rank": 6,
+          "card_id": 20,
+          "card_name": "Uphold",
+          "score": 69
+        },
+        {
+          "rank": 7,
+          "card_id": 14,
+          "card_name": "CL Card",
+          "score": 69
+        },
+        {
+          "rank": 8,
+          "card_id": 15,
+          "card_name": "Nexo",
+          "score": 68
+        },
+        {
+          "rank": 9,
+          "card_id": 72,
+          "card_name": "Rizon",
+          "score": 68
+        },
+        {
+          "rank": 10,
+          "card_id": 13,
+          "card_name": "KuCard",
+          "score": 68
+        }
+      ],
+      "v2_top10": [
+        {
+          "rank": 1,
+          "card_id": 60,
+          "card_name": "Karta",
+          "score": 35.75
+        },
+        {
+          "rank": 2,
+          "card_id": 5,
+          "card_name": "Coinbase One",
+          "score": 34.95
+        },
+        {
+          "rank": 3,
+          "card_id": 93,
+          "card_name": "Solid",
+          "score": 34.3
+        },
+        {
+          "rank": 4,
+          "card_id": 3,
+          "card_name": "Bybit",
+          "score": 34.1
+        },
+        {
+          "rank": 5,
+          "card_id": 14,
+          "card_name": "CL Card",
+          "score": 32.2
+        },
+        {
+          "rank": 6,
+          "card_id": 86,
+          "card_name": "Spritz",
+          "score": 30.05
+        },
+        {
+          "rank": 7,
+          "card_id": 35,
+          "card_name": "Gemini",
+          "score": 29.89
+        },
+        {
+          "rank": 8,
+          "card_id": 100,
+          "card_name": "Gnosis Pay",
+          "score": 29.83
+        },
+        {
+          "rank": 9,
+          "card_id": 72,
+          "card_name": "Rizon",
+          "score": 26.39
+        },
+        {
+          "rank": 10,
+          "card_id": 13,
+          "card_name": "KuCard",
+          "score": 26
+        }
+      ],
+      "bit2go_rank_v1": null,
+      "bit2go_rank_v2": null,
+      "bit2go_score_v1": null,
+      "bit2go_score_v2": null,
+      "top10_added_in_v2": [
+        60,
+        5,
+        93,
+        35,
+        100
+      ],
+      "top10_dropped_in_v2": [
+        92,
+        84,
+        1,
+        20,
+        15
+      ],
+      "primary_card_changed": true,
+      "v1_primary": {
+        "card_id": 92,
+        "card_name": "Emoney"
+      },
+      "v2_primary": {
+        "card_id": 60,
+        "card_name": "Karta"
+      },
+      "v1_all_scores": [
+        71,
+        71,
+        71,
+        71,
+        69,
+        69,
+        69,
+        68,
+        68,
+        68,
+        68,
+        66,
+        66,
+        66,
+        66,
+        66,
+        66,
+        66,
+        64,
+        63,
+        63,
+        63,
+        63,
+        63,
+        63,
+        63,
+        63,
+        63,
+        62,
+        61,
+        56,
+        56,
+        50,
+        50,
+        50,
+        49,
+        49,
+        49,
+        47,
+        47,
+        47,
+        47,
+        47,
+        46,
+        45,
+        44,
+        44,
+        44,
+        42,
+        40,
+        40,
+        39,
+        39,
+        39,
+        37,
+        35,
+        35,
+        26
+      ],
+      "v2_all_scores": [
+        35.75,
+        34.95,
+        34.3,
+        34.1,
+        32.2,
+        30.05,
+        29.89,
+        29.83,
+        26.39,
+        26,
+        22.42,
+        22.2,
+        21.89,
+        21.72,
+        21.51,
+        20.95,
+        20.58,
+        20.19,
+        19.58,
+        19.5,
+        18.63,
+        17.89,
+        16.13,
+        15.72,
+        14.88,
+        14.25,
+        13.36,
+        12.93,
+        12.15,
+        10.21,
+        10.18,
+        9.71,
+        9.56,
+        9.4,
+        9.09,
+        8.58,
+        8.3,
+        7.05,
+        6.36,
+        5.61,
+        5.46,
+        3.46,
+        3.4,
+        3.34,
+        2.18,
+        1.66,
+        1.45,
+        1.36,
+        1.34,
+        1.33,
+        1.11,
+        1.1,
+        1.1,
+        1.09,
+        1.09,
+        1.08,
+        0.91,
+        0.74
+      ]
+    }
+  ]
+}

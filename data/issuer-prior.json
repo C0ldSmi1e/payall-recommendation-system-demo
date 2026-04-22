@@ -1,0 +1,12 @@
+{
+  "bit2go": { "approvals": 0, "rejections": 0, "complaints": 0, "seed": 0.75 },
+  "redotpay": { "approvals": 0, "rejections": 0, "complaints": 0, "seed": 0.78 },
+  "gemini": { "approvals": 0, "rejections": 0, "complaints": 0, "seed": 0.82 },
+  "crypto.com": { "approvals": 0, "rejections": 0, "complaints": 1, "seed": 0.68 },
+  "nexo": { "approvals": 0, "rejections": 0, "complaints": 0, "seed": 0.72 },
+  "solayer": { "approvals": 0, "rejections": 0, "complaints": 0, "seed": 0.62 },
+  "fold": { "approvals": 0, "rejections": 0, "complaints": 0, "seed": 0.70 },
+  "1inch": { "approvals": 0, "rejections": 0, "complaints": 0, "seed": 0.65 },
+  "bybit": { "approvals": 0, "rejections": 0, "complaints": 0, "seed": 0.72 },
+  "coinbase": { "approvals": 0, "rejections": 0, "complaints": 0, "seed": 0.80 }
+}
