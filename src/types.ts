@@ -251,6 +251,16 @@ export interface FinalRecommendation {
     };
     conversion_hook: string;
     next_action: { type: string; description: string };
+    // 由 scoring-v2 的 overrideFinalRecWithV2Scores() 在 pipeline 末尾注入。
+    // v1 模式下 / 或 trace 缺失时为 undefined；UI 不显示 debug 面板。
+    v2_debug?: {
+      display_score: number;
+      benchmark_score: number;
+      fitFraction: number;
+      monetaryUplift: number;
+      safetyFactor: number;
+      promoted: boolean;
+    };
   };
   backups: {
     card_id: number;

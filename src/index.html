@@ -436,7 +436,9 @@ function startPipeline(userId){
 
 // ---- Render results ----
 const INS_ICON={location_inference:'📍',spending_pattern:'📊',gap_analysis:'🔍',savings_opportunity:'💰',pain_point:'⚠️'};
-function sc(s){return s>=70?'hi':s>=40?'md':'lo';}
+// Threshold 按 scoring-v2 的自然分布重标（top-10 均值 ~37，top-end ~52；详见 scoring-v2-verification.md §2.2）。
+// v1 分数普遍更高，在新阈值下也仍然显示为 hi/md，不会倒置。
+function sc(s){return s>=40?'hi':s>=20?'md':'lo';}
 
 function renderFinalRecommendation(rec,cardsMeta){
   const cm={};(cardsMeta||[]).forEach(c=>cm[c.id]=c);
@@ -459,6 +461,18 @@ function renderFinalRecommendation(rec,cardsMeta){
   const bd=p.score_breakdown||[];
   const bdH=bd.length?`<div class="bd"><div class="bd-title">${t('bd_title')}</div>${bd.map(d=>{const v=Math.round(d.score);return`<div class="bd-row"><div class="bd-head"><span class="bd-label">${d.label}</span><span class="bd-val">${v}</span></div><div class="bd-track"><div class="bd-fill ${sc(v)}" style="width:${v}%"></div></div><div class="bd-exp">${d.explanation}</div></div>`;}).join('')}</div>`:'';
 
+  // v2 debug panel: 仅在 scoring-v2 wire-up 生效时出现（由 overrideFinalRecWithV2Scores 注入）
+  // 展示乘法合成的三个中间量，让老板可以验证 display_score = 100 × FF × MU × SF
+  const v2d = p.v2_debug;
+  const v2dH = v2d?`<div class="bd" style="border:1px dashed #252040"><div class="bd-title" style="color:#c4b5fd">scoring-v2 trace</div>
+    <div style="font-size:11px;color:#888;line-height:1.8;font-family:ui-monospace,monospace">
+      display_score = 100 × <b style="color:#6ee7b7">${v2d.fitFraction.toFixed(3)}</b> (FitFraction)
+      × <b style="color:#fcd34d">${v2d.monetaryUplift.toFixed(3)}</b> (MonetaryUplift)
+      × <b style="color:#c4b5fd">${v2d.safetyFactor.toFixed(3)}</b> (SafetyFactor)
+      = <b style="color:#fff">${v2d.display_score.toFixed(2)}</b><br>
+      benchmark_score (对外榜) = ${v2d.benchmark_score.toFixed(1)} &nbsp;·&nbsp; promoted = ${v2d.promoted?'true':'false'}
+    </div></div>`:'';
+
   function chips(c){
     if(!c)return'';
     return [c.kyc_required?'<span class="chip">KYC</span>':'<span class="chip chip-g">No KYC</span>',
@@ -470,7 +484,7 @@ function renderFinalRecommendation(rec,cardsMeta){
 
   const analysisInner=`${locH}${insH}`;
   const analysisH=analysisInner?`<div class="sec collapsed" id="secAnalysis" style="margin-bottom:12px"><div class="sec-hd" onclick="toggleSec('secAnalysis')"><span>${t('sec_analysis')}</span><span class="chev">▸</span></div><div class="sec-body">${analysisInner}</div></div>`:'';
-  const bdWrapped=bdH?`<div class="sec collapsed" id="secBd"><div class="sec-hd" onclick="toggleSec('secBd')"><span>${t('bd_title')}</span><span class="chev">▸</span></div><div class="sec-body">${bdH}</div></div>`:'';
+  const bdWrapped=bdH?`<div class="sec collapsed" id="secBd"><div class="sec-hd" onclick="toggleSec('secBd')"><span>${t('bd_title')}</span><span class="chev">▸</span></div><div class="sec-body">${bdH}${v2dH}</div></div>`:'';
 
   let h=`${analysisH}${b2gH}
     <div class="pcard"><div class="pcard-badge">BEST MATCH</div>
