@@ -357,7 +357,7 @@ function renderHome(){
 // Render Cards Detail
 function renderCardsDetail(){
   if(!R)return;const p=R.primary,bks=R.backups||[],cm={};(CM||[]).forEach(c=>cm[c.id]=c);
-  function sc(s){return s>=70?'hi':s>=40?'md':'lo';}
+  function sc(s){return s>=40?'hi':s>=20?'md':'lo';} // aligned with scoring-v2 distribution (see index.html)
   function chips(c){return c?[c.kyc_required?'<span class="cd-chip">KYC</span>':'<span class="cd-chip g">No KYC</span>',c.apple_wallet_support?'<span class="cd-chip">Apple Pay</span>':'',c.atm_withdrawal_support?'<span class="cd-chip">ATM</span>':''].filter(Boolean).join(''):'';}
 
   const pc=cm[p.card_id]||{};

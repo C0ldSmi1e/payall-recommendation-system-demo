@@ -13,7 +13,7 @@ import {
 import { runConstraintEngine } from "./engine/constraint";
 import { computeCardPerception } from "./engine/perception";
 import { rescoreAndSort } from "./engine/scoring";
-import { rescoreAndSortV2, buildV2Context } from "./engine/scoring-v2";
+import { rescoreAndSortV2, buildV2Context, overrideFinalRecWithV2Scores } from "./engine/scoring-v2";
 import type { MultiOutcomeCardV2 } from "./engine/scoring-v2/types";
 import { validateStepOutput, type ValidationResult } from "./engine/validators";
 import { inferLocation, type InferredLocation } from "./engine/location";
@@ -263,6 +263,9 @@ Select 1 primary + 2 backups from the top 10. Output the final recommendation wi
   );
 
   const finalWithFixes = applyQuickFixOverrides(user.id, finalRec);
+  // G5 wire-up: override LLM-编的 score/score_breakdown with scoring-v2 determ. trace.
+  // 在 v1 模式下 perception cards 没有 v2_trace，函数无副作用。
+  overrideFinalRecWithV2Scores(finalWithFixes, perceptionResult.cards as MultiOutcomeCardV2[]);
   const recCardIds = new Set([finalWithFixes.primary.card_id, ...finalWithFixes.backups.map((b) => b.card_id)]);
 
   send("pipeline_done", {
@@ -302,6 +305,8 @@ export async function reRankPipeline(userId: string, send: SendFn): Promise<void
   );
 
   const finalWithFixes = applyQuickFixOverrides(userId, finalRec);
+  // G5 wire-up (rerank 路径也走同一个 override)
+  overrideFinalRecWithV2Scores(finalWithFixes, remaining as MultiOutcomeCardV2[]);
   const recCardIds = new Set([finalWithFixes.primary.card_id, ...finalWithFixes.backups.map((b) => b.card_id)]);
   send("pipeline_done", { recommendation: finalWithFixes, cards: buildCardMeta(cards, recCardIds) });
 }

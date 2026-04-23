@@ -196,3 +196,39 @@ v2 的 top-10 score 数值更"压缩"。这**是乘法合成的自然结果**：
 | 是否原生植入 pipeline？ | ✓ `src/pipeline.ts:15-38` 的 `rescoreAndSortByVersion` + 两处调用（主 pipeline + rerank） |
 
 **Overall Verdict ✓** — 符合设计稿要求，准备 dark-launch。
+
+---
+
+## 7. UI wire-up 补丁（2026-04-23）
+
+**触发原因**：dark-launch 期间发现虽然 `SCORING_VERSION=v2` 已开，但 `/desktop` 页面上老板看到的 primary score 数字（顶部大 badge）和 `score_breakdown`（分条）仍然**由 LLM 自编**，与 `v2_trace.display_score` 脱节。G5 在 `breakdown.ts::deriveScoreBreakdown` 存在，但从未被 pipeline 调用。
+
+### 改动清单
+
+| # | 文件 | 改动 | 追溯 |
+|---|---|---|---|
+| 1 | `src/engine/scoring-v2/breakdown.ts` | 新增 `overrideFinalRecWithV2Scores(rec, perceptionCards)`：用 `v2_trace` 覆盖 `primary.score` / `primary.score_breakdown` / `backups[i].score`，并把三项乘法中间量写到 `primary.v2_debug`。函数对 v1（无 trace）是 no-op。 | grep `overrideFinalRecWithV2Scores` 找到唯一定义；pipeline 里两处调用。 |
+| 2 | `src/engine/scoring-v2/index.ts` | re-export 上面的函数。 | 同上 |
+| 3 | `src/types.ts` | `FinalRecommendation.primary` 新增 `v2_debug?` 可选字段（display_score / benchmark_score / fitFraction / monetaryUplift / safetyFactor / promoted）。 | grep `v2_debug` |
+| 4 | `src/pipeline.ts` | `runPipeline` 和 `reRankPipeline` 的 `applyQuickFixOverrides` 之后、`send("pipeline_done")` 之前各加一行 `overrideFinalRecWithV2Scores(...)`。 | grep `G5 wire-up` 定位两处注释 |
+| 5 | `src/index.html` | `sc()` 颜色阈值由 `hi≥70/md≥40` 改为 `hi≥40/md≥20`，匹配 v2 top-10 分布（均值 36.76，见 §2.2）；primary 卡新增 `v2 trace` debug 面板，展示 `100 × FF × MU × SF = display_score` 等式。 | grep `v2_debug` / `scoring-v2 trace` |
+| 6 | `src/wallet.html` | `sc()` 阈值同步调整。 | 同上 |
+
+### 不变量
+
+- 若 `SCORING_VERSION=v1`（或 env 未设），`perceptionResult.cards` 没有 `v2_trace` → `overrideFinalRecWithV2Scores` 原样放行，零影响。回滚路径保留。
+- 若 trace 存在：`primary.score === Math.round(trace.display_score)` **必然成立**。可以通过 `/desktop` debug 面板三项相乘 ×100 ≈ `primary.score`（badge 数字）验证。
+- `primary.score_breakdown` 每项 `score` 100% 来自 `dimValue(trace, dim)`，LLM 不再有机会写 score 字段。
+
+### 如何复核
+
+1. 刷新 `/desktop`，观察 primary 卡：
+   - 顶部大数字（`primary.score`）应 **等于** 底部 debug 面板里 `100 × FitFraction × MonetaryUplift × SafetyFactor`（容许 ±1 整数取整误差）。
+   - breakdown 每行的 label 来自 `LABELS` 表（发卡商声誉 / 你的实际返现 / 功能匹配 / 费用负担 / 连续性风险 / 个人摩擦 / 互补性），而不是 LLM 编的英文标题。
+2. `SCORING_VERSION=v1 bun run src/server.ts` 再刷一次 `/desktop`，应当 **不** 出现 debug 面板（因为 `v2_debug` 是 undefined），breakdown 恢复 LLM 的老输出。
+3. `./node_modules/.bin/tsc --noEmit -p tsconfig.json` 在 scoring-v2 相关文件上应无新增错误。
+
+### 已知局限
+
+- `deriveScoreBreakdown` 的 `explanation` 目前是模板化的"权重 X% · 贡献 ≈ Y"，失去了 LLM 原本写的用户数据引用（如 "78% of your spend is dining"）。下一步可以把 LLM 的 `explanation` 按 dimension 名做 fuzzy match 合并进来，保留自然语言 + 用确定性数字。作为 Phase 0 先保证数字正确、展示一致。
+- v2 debug 面板是明文暴露内部数字，生产前需要关 flag（如 `SHOW_V2_DEBUG=1`）。当前 demo 阶段直接展示以便老板验证。

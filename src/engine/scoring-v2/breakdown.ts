@@ -7,8 +7,8 @@
  * LLM 只负责填 explanation 的自然语言；score 和 weight 数值完全由代码给。
  */
 
-import type { ScoreBreakdown } from "../../types";
-import type { V2Trace } from "./types";
+import type { ScoreBreakdown, FinalRecommendation } from "../../types";
+import type { V2Trace, MultiOutcomeCardV2 } from "./types";
 import { clamp100 } from "./invariants";
 
 // 维度对应的用户可读 label（中文优先，给 payall 用户看）
@@ -92,4 +92,55 @@ export function deriveFullBreakdown(trace: V2Trace): {
     dimensions: deriveScoreBreakdown(trace),
     notes,
   };
+}
+
+// ---------------------------------------------------------------------------
+// overrideFinalRecWithV2Scores  ·  G5 的真正 wire-up
+// ---------------------------------------------------------------------------
+// 设计稿第七节要求 "score_breakdown 由代码产出，LLM 只填 explanation"。
+// 本函数是唯一把 scoring-v2 trace 落回 UI 展示字段的地方。
+//
+// 作用：
+//   1. 用 trace.display_score 覆盖 primary.score 和 backups[i].score（整数）。
+//      —— 之前 LLM 可以在 JSON 里随便写 score:88，和真实排序完全脱节。
+//   2. 用 deriveScoreBreakdown(trace) 覆盖 primary.score_breakdown。
+//      —— 之前 LLM 自己编每个维度的分数，和 display_score 算不出关系。
+//   3. 把 fitFraction / monetaryUplift / safetyFactor / benchmark_score 挂到
+//      primary.v2_debug，UI 可以显式展示"为什么这个分"，与 trace 一一对应。
+//
+// 不改：primary.reason / pros / cons / insights / bit2go_action / next_action —
+// 这些是 LLM 真正擅长的自然语言，保留。
+//
+// 追溯：如果你看到 UI 上分数和排序对不上，这里是唯一 override 点。
+//       如果传入的 perceptionCards 缺少 v2_trace（v1 模式下），函数
+//       "就地 no-op"，以便 SCORING_VERSION=v1 依然 work。
+// ---------------------------------------------------------------------------
+export function overrideFinalRecWithV2Scores(
+  rec: FinalRecommendation,
+  perceptionCards: MultiOutcomeCardV2[],
+): FinalRecommendation {
+  const byId = new Map<number, MultiOutcomeCardV2>();
+  for (const pc of perceptionCards) byId.set(pc.card_id, pc);
+
+  const primaryPc = byId.get(rec.primary.card_id);
+  if (primaryPc?.v2_trace) {
+    const t = primaryPc.v2_trace;
+    rec.primary.score = Math.round(t.display_score);
+    rec.primary.score_breakdown = deriveScoreBreakdown(t);
+    rec.primary.v2_debug = {
+      display_score: Math.round(t.display_score * 100) / 100,
+      benchmark_score: Math.round(t.benchmark.benchmark_score * 100) / 100,
+      fitFraction: Math.round(t.fitFraction * 1000) / 1000,
+      monetaryUplift: Math.round(t.monetaryUplift * 1000) / 1000,
+      safetyFactor: Math.round(t.safetyFactor * 1000) / 1000,
+      promoted: t.guardrail_flags.promoted,
+    };
+  }
+
+  for (const bk of rec.backups ?? []) {
+    const bkPc = byId.get(bk.card_id);
+    if (bkPc?.v2_trace) bk.score = Math.round(bkPc.v2_trace.display_score);
+  }
+
+  return rec;
 }

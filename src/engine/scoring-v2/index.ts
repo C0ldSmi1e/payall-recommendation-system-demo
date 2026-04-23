@@ -149,7 +149,7 @@ export function rescoreAndSortV2(
 }
 
 // Re-export breakdown helpers
-export { deriveScoreBreakdown, deriveFullBreakdown } from "./breakdown";
+export { deriveScoreBreakdown, deriveFullBreakdown, overrideFinalRecWithV2Scores } from "./breakdown";
 export { FACTOR_MAP_V2, DEFAULT_WEIGHTS_V2, mapPreferencesToWeightsV2 } from "./factor-map";
 export { V2_DIMENSIONS } from "./types";
 export type { V2Trace, V2Weights, V2Benchmark, V2Fit, V2Context, MultiOutcomeCardV2 } from "./types";
